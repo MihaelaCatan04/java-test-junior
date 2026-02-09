@@ -19,4 +19,5 @@ public interface ProductService {
      */
     Product createProduct(ProductDTO productDTO);
     Product getProductById(Long id);
+    void modifyProductById(Long id, ProductDTO productDTO);
 }

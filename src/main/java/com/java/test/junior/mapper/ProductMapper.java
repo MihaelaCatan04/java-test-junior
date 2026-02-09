@@ -5,6 +5,7 @@
 package com.java.test.junior.mapper;
 
 import com.java.test.junior.model.Product;
+import com.java.test.junior.model.ProductDTO;
 import org.apache.ibatis.annotations.Mapper;
 
 /**
@@ -17,4 +18,5 @@ import org.apache.ibatis.annotations.Mapper;
 public interface ProductMapper {
     Product findById(Long id);
     void insert(Product product);
+    void updateProduct(Long id, Product product);
 }

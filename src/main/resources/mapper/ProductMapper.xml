@@ -11,7 +11,6 @@
         <id property="id" column="id"/>
         <result property="name" column="name"/>
         <result property="price" column="price"/>
-        <result property="price" column="price"/>
         <result property="description" column="description"/>
         <result property="userId" column="user_id"/>
         <result property="createdAt" column="created_at"/>
@@ -22,4 +21,18 @@
         INSERT INTO product (name, price, description, user_id, created_at, updated_at)
         VALUES (#{name}, #{price}, #{description}, #{userId}, #{createdAt}, #{updatedAt})
     </insert>
+
+    <update id="updateProduct" parameterType="com.java.test.junior.model.Product">
+        UPDATE product
+        SET
+            name = #{product.name},
+            price = #{product.price},
+            description = #{product.description},
+            user_id = #{product.userId},
+            created_at = #{product.createdAt},
+            updated_at = #{product.updatedAt}
+        WHERE
+            id = #{product.id}
+    </update>
+
 </mapper>
