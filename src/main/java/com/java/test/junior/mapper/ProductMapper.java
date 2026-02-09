@@ -7,6 +7,7 @@ package com.java.test.junior.mapper;
 import com.java.test.junior.model.Product;
 import com.java.test.junior.model.ProductDTO;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
 
@@ -20,7 +21,7 @@ import java.util.List;
 public interface ProductMapper {
     ProductDTO findById(Long id);
     void insert(Product product);
-    void updateProduct(Long id, ProductDTO product);
+    void updateProduct(@Param("id") Long id, @Param("product") ProductDTO product);
     void deleteProduct(Long id);
-    List<ProductDTO> getPaginatedProducts(int page, int size);
+    List<ProductDTO> getPaginatedProducts(@Param("page") int page, @Param("size") int size);
 }
