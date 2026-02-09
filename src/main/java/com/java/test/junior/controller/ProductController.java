@@ -27,4 +27,10 @@ public class ProductController {
     public Product createProduct(@RequestBody ProductDTO productDTO) {
         return productService.createProduct(productDTO);
     }
+
+    @GetMapping("/{id}")
+    @ResponseStatus(HttpStatus.ACCEPTED)
+    public Product getProductById(@PathVariable Long id) {
+        return productService.getProductById(id);
+    }
 }

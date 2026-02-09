@@ -18,4 +18,5 @@ public interface ProductService {
      * @return the product created from the database
      */
     Product createProduct(ProductDTO productDTO);
+    Product getProductById(Long id);
 }
