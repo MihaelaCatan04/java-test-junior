@@ -17,4 +17,9 @@
         <result property="createdAt" column="created_at"/>
         <result property="updatedAt" column="updated_at"/>
     </resultMap>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id" keyColumn="id">
+        INSERT INTO product (name, price, description, user_id, created_at, updated_at)
+        VALUES (#{name}, #{price}, #{description}, #{userId}, #{createdAt}, #{updatedAt})
+    </insert>
 </mapper>
