@@ -7,6 +7,8 @@ package com.java.test.junior.service;
 import com.java.test.junior.model.Product;
 import com.java.test.junior.model.ProductDTO;
 
+import java.util.List;
+
 /**
  * @author dumitru.beselea
  * @version java-test-junior
@@ -21,4 +23,5 @@ public interface ProductService {
     Product getProductById(Long id);
     void modifyProductById(Long id, ProductDTO productDTO);
     void deleteProductById(Long id);
+    List<ProductDTO> getPaginatedProducts(int page, int size);
 }

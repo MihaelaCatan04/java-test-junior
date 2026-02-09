@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * @author dumitru.beselea
@@ -57,5 +58,10 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public void deleteProductById(Long id) {
         productMapper.deleteProduct(id);
+    }
+
+    @Override
+    public List<ProductDTO> getPaginatedProducts(int page, int size) {
+        return productMapper.getPaginatedProducts(page, size);
     }
 }

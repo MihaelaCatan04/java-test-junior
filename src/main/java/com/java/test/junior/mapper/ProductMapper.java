@@ -8,6 +8,8 @@ import com.java.test.junior.model.Product;
 import com.java.test.junior.model.ProductDTO;
 import org.apache.ibatis.annotations.Mapper;
 
+import java.util.List;
+
 /**
  * @author dumitru.beselea
  * @version java-test-junior
@@ -20,4 +22,5 @@ public interface ProductMapper {
     void insert(Product product);
     void updateProduct(Long id, Product product);
     void deleteProduct(Long id);
+    List<ProductDTO> getPaginatedProducts(int page, int size);
 }

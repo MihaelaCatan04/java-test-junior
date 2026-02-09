@@ -11,6 +11,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 /**
  * @author dumitru.beselea
  * @version java-test-junior
@@ -44,5 +46,11 @@ public class ProductController {
     @ResponseStatus(HttpStatus.OK)
     public void deleteProduct(@PathVariable Long id) {
         productService.deleteProductById(id);
+    }
+
+    @GetMapping()
+    @ResponseStatus(HttpStatus.OK)
+    public List<ProductDTO> getPaginatedProducts(@RequestParam("page") int page, @RequestParam("page_size") int size) {
+        return productService.getPaginatedProducts(page, size);
     }
 }
