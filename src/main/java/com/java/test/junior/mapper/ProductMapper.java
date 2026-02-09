@@ -18,9 +18,9 @@ import java.util.List;
 
 @Mapper
 public interface ProductMapper {
-    Product findById(Long id);
+    ProductDTO findById(Long id);
     void insert(Product product);
-    void updateProduct(Long id, Product product);
+    void updateProduct(Long id, ProductDTO product);
     void deleteProduct(Long id);
     List<ProductDTO> getPaginatedProducts(int page, int size);
 }

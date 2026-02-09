@@ -42,13 +42,13 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public Product getProductById(Long id) {
+    public ProductDTO getProductById(Long id) {
         return productMapper.findById(id);
     }
 
     @Override
     public void modifyProductById(Long id, ProductDTO productDTO) {
-        Product productFromDb = productMapper.findById(id);
+        ProductDTO productFromDb = productMapper.findById(id);
         productFromDb.setName(productDTO.getName());
         productFromDb.setPrice(productDTO.getPrice());
         productFromDb.setDescription(productDTO.getDescription());

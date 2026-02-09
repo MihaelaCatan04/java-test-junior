@@ -1,11 +1,13 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="com.java.test.junior.mapper.ProductMapper">
-    <select id="findById" resultMap="productResultMapper">
+    <select id="findById" resultMap="productResultMapperDTO">
         SELECT *
         FROM product
         WHERE id = #{id}
     </select>
+
+
 
     <resultMap id="productResultMapper" type="com.java.test.junior.model.Product">
         <id property="id" column="id"/>
@@ -22,17 +24,14 @@
         VALUES (#{name}, #{price}, #{description}, #{userId}, #{createdAt}, #{updatedAt})
     </insert>
 
-    <update id="updateProduct" parameterType="com.java.test.junior.model.Product">
+    <update id="updateProduct">
         UPDATE product
         SET
             name = #{product.name},
             price = #{product.price},
-            description = #{product.description},
-            user_id = #{product.userId},
-            created_at = #{product.createdAt},
-            updated_at = #{product.updatedAt}
+            description = #{product.description}
         WHERE
-            id = #{product.id}
+            id = #{id}
     </update>
     <delete id="deleteProduct">
         DELETE FROM product

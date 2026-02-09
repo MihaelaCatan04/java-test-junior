@@ -20,7 +20,7 @@ public interface ProductService {
      * @return the product created from the database
      */
     Product createProduct(ProductDTO productDTO);
-    Product getProductById(Long id);
+    ProductDTO getProductById(Long id);
     void modifyProductById(Long id, ProductDTO productDTO);
     void deleteProductById(Long id);
     List<ProductDTO> getPaginatedProducts(int page, int size);
