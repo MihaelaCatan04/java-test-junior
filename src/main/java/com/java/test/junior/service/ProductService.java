@@ -19,7 +19,7 @@ public interface ProductService {
      * @param productDTO this product to be created
      * @return the product created from the database
      */
-    Product createProduct(ProductDTO productDTO);
+    ProductDTO createProduct(ProductDTO productDTO);
     ProductDTO getProductById(Long id);
     void modifyProductById(Long id, ProductDTO productDTO);
     void deleteProductById(Long id);

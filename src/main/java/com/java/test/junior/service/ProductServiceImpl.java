@@ -29,7 +29,7 @@ public class ProductServiceImpl implements ProductService {
      * @return the product created from the database
      */
     @Override
-    public Product createProduct(ProductDTO productDTO) {
+    public ProductDTO createProduct(ProductDTO productDTO) {
         Product product = new Product();
         product.setName(productDTO.getName());
         product.setPrice(productDTO.getPrice());
@@ -38,7 +38,11 @@ public class ProductServiceImpl implements ProductService {
         product.setCreatedAt(LocalDateTime.now());
         product.setUpdatedAt(LocalDateTime.now());
         productMapper.insert(product);
-        return product;
+        ProductDTO productToBeReturned = new ProductDTO();
+        productToBeReturned.setName(product.getName());
+        productToBeReturned.setPrice(product.getPrice());
+        productToBeReturned.setDescription(product.getDescription());
+        return productToBeReturned;
     }
 
     @Override
