@@ -1,20 +1,52 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="com.java.test.junior.mapper.ProductMapper">
-    <select id="findById" resultMap="productResultMapper">
+    <select id="findById" resultMap="productResultMapperDTO">
         SELECT *
         FROM product
         WHERE id = #{id}
     </select>
 
+
+
     <resultMap id="productResultMapper" type="com.java.test.junior.model.Product">
         <id property="id" column="id"/>
         <result property="name" column="name"/>
-        <result property="price" column="price"/>
         <result property="price" column="price"/>
         <result property="description" column="description"/>
         <result property="userId" column="user_id"/>
         <result property="createdAt" column="created_at"/>
         <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id" keyColumn="id">
+        INSERT INTO product (name, price, description, user_id, created_at, updated_at)
+        VALUES (#{name}, #{price}, #{description}, #{userId}, #{createdAt}, #{updatedAt})
+    </insert>
+
+    <update id="updateProduct">
+        UPDATE product
+        SET
+            name = #{product.name},
+            price = #{product.price},
+            description = #{product.description}
+        WHERE
+            id = #{id}
+    </update>
+    <delete id="deleteProduct">
+        DELETE FROM product
+        WHERE id=#{id}
+    </delete>
+    <select id="getPaginatedProducts" resultMap="productResultMapperDTO">
+        SELECT *
+        FROM product
+        LIMIT #{size}
+        OFFSET (#{page} - 1) * #{size}
+    </select>
+
+    <resultMap id="productResultMapperDTO" type="com.java.test.junior.model.ProductDTO">
+        <result property="name" column="name"/>
+        <result property="price" column="price"/>
+        <result property="description" column="description"/>
     </resultMap>
 </mapper>
