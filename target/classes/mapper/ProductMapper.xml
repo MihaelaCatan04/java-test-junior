@@ -34,5 +34,8 @@
         WHERE
             id = #{product.id}
     </update>
-
+    <delete id="deleteProduct">
+        DELETE FROM product
+        WHERE id=#{id}
+    </delete>
 </mapper>

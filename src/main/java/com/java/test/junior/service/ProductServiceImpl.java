@@ -53,4 +53,9 @@ public class ProductServiceImpl implements ProductService {
         productFromDb.setDescription(productDTO.getDescription());
         productMapper.updateProduct(id, productFromDb);
     }
+
+    @Override
+    public void deleteProductById(Long id) {
+        productMapper.deleteProduct(id);
+    }
 }
