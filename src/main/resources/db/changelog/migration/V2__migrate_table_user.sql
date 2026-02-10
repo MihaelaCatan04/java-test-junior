@@ -1,5 +1,5 @@
 --
--- Name: user; Type: TABLE; Schema: public; Owner: postgres
+-- Name: users; Type: TABLE; Schema: public; Owner: postgres
 --
 CREATE TABLE IF NOT EXISTS "users"
 (
