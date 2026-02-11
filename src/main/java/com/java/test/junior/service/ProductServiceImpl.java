@@ -124,7 +124,7 @@ public class ProductServiceImpl implements ProductService {
         Boolean currentInteraction = interactionMapper.getExistingInteraction(userId, productId);
 
         if (currentInteraction != null && currentInteraction) {
-            throw new IllegalArgumentException("You already liked this product!");
+            interactionMapper.removeInteraction(userId, productId);
         }
 
         interactionMapper.insertInteraction(userId, productId, true);
@@ -141,7 +141,7 @@ public class ProductServiceImpl implements ProductService {
         Boolean currentInteraction = interactionMapper.getExistingInteraction(userId, productId);
 
         if (currentInteraction != null && !currentInteraction) {
-            throw new IllegalArgumentException("You already disliked this product!");
+            interactionMapper.removeInteraction(userId, productId);
         }
 
         interactionMapper.insertInteraction(userId, productId, false);

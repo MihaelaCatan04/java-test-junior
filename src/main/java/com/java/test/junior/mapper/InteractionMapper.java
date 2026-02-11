@@ -11,4 +11,7 @@ public interface InteractionMapper {
 
     Boolean getExistingInteraction(@Param("userId") Long userId,
                                    @Param("productId") Long productId);
+
+    void removeInteraction(@Param("userId") Long userId,
+                           @Param("productId") Long productId);
 }

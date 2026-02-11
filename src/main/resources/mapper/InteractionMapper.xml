@@ -14,4 +14,10 @@
         DO
         UPDATE SET is_like = EXCLUDED.is_like
     </insert>
+
+    <delete id="removeInteraction">
+        DELETE FROM product_interactions
+        WHERE user_id = #{userId}
+          AND product_id = #{productId}
+    </delete>
 </mapper>
