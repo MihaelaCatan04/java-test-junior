@@ -31,13 +31,15 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void save(UserDTO userDTO) {
-        if (findByUsername(userDTO.getUsername()) != null) {
+        try {
+            findByUsername(userDTO.getUsername());
             throw new UserAlreadyExistsException("User already exists!");
+        } catch (UserNotFoundException e) {
+            User userEntity = new User();
+            userEntity.setUsername(userDTO.getUsername());
+            userEntity.setPassword(passwordEncoder.encode(userDTO.getPassword()));
+            userEntity.setRole("USER");
+            userMapper.save(userEntity);
         }
-
-        User userEntity = new User();
-        userEntity.setUsername(userDTO.getUsername());
-        userEntity.setPassword(passwordEncoder.encode(userDTO.getPassword()));
-        userMapper.save(userEntity);
     }
 }

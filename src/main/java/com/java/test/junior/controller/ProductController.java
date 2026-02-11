@@ -84,4 +84,6 @@ public class ProductController {
     public void dislikeProduct(@PathVariable Long id) {
         productService.dislikeProduct(id);
     }
+
+//    @PostMapping("/loading")
 }
