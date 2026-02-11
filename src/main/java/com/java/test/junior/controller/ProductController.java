@@ -4,6 +4,7 @@
 
 package com.java.test.junior.controller;
 
+import com.java.test.junior.model.LoadingDTO;
 import com.java.test.junior.model.ProductDTO;
 import com.java.test.junior.service.ProductService;
 import jakarta.validation.Valid;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import java.io.IOException;
 import java.util.List;
 
 /**
@@ -85,5 +87,10 @@ public class ProductController {
         productService.dislikeProduct(id);
     }
 
-//    @PostMapping("/loading")
+    @PostMapping("/loading/products")
+    @ResponseStatus(HttpStatus.CREATED)
+    @Operation(summary = "Load products from a local or remote CSV path")
+    public void loadProducts(@RequestBody LoadingDTO loadingDTO) throws IOException {
+        productService.loadProductsFromAddress(loadingDTO.getFileAddress());
+    }
 }

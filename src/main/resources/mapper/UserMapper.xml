@@ -20,4 +20,8 @@
         VALUES (#{username}, #{password}, #{role})
     </insert>
 
+    <select id="findFirstByRole" resultType="com.java.test.junior.model.User">
+        SELECT * FROM users WHERE role = #{role} LIMIT 1
+    </select>
+
 </mapper>

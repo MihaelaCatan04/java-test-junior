@@ -36,4 +36,16 @@ public class GlobalExceptionHandler {
     public String handleUserNotLoggedIn(UserNotLoggedInException ex) {
         return ex.getMessage();
     }
+
+    @ExceptionHandler(Exception.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public String handleFileNotFound(FileNotFoundException ex) {
+        return ex.getMessage();
+    }
+
+    @ExceptionHandler(RuntimeException.class)
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    public String handleRuntimeException(RuntimeException ex) {
+        return ex.getMessage();
+    }
 }
