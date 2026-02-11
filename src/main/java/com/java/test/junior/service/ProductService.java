@@ -29,4 +29,8 @@ public interface ProductService {
     List<ProductDTO> getPaginatedProducts(int page, int size);
 
     ProductDTO getProductByName(String name);
+
+    void likeProduct(Long id);
+
+    void dislikeProduct(Long id);
 }

@@ -58,7 +58,19 @@ public class ProductController {
 
     @GetMapping("name/{name}")
     @ResponseStatus(HttpStatus.OK)
-    public ProductDTO getProductByName( @PathVariable String name) {
+    public ProductDTO getProductByName(@PathVariable String name) {
         return productService.getProductByName(name);
+    }
+
+    @PostMapping("/{id}/like")
+    @ResponseStatus(HttpStatus.OK)
+    public void likeProduct(@PathVariable Long id) {
+        productService.likeProduct(id);
+    }
+
+    @PostMapping("{id}/dislike")
+    @ResponseStatus(HttpStatus.OK)
+    public void dislikeProduct(@PathVariable Long id) {
+        productService.dislikeProduct(id);
     }
 }

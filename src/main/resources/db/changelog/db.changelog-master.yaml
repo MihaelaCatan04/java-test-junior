@@ -5,3 +5,9 @@ databaseChangeLog:
   - include:
       file: migration/V1__migrate_table_product.sql
       relativeToChangelogFile: true
+  - include:
+      file: migration/V2__migrate_table_user.sql
+      relativeToChangelogFile: true
+  - include:
+      file: migration/V3__migrate_table_product_interactions.sql
+      relativeToChangelogFile: true
