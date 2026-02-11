@@ -55,4 +55,22 @@ public class ProductController {
     public List<ProductDTO> getPaginatedProducts(@RequestParam("page") int page, @RequestParam("page_size") int size) {
         return productService.getPaginatedProducts(page, size);
     }
+
+    @GetMapping("name/{name}")
+    @ResponseStatus(HttpStatus.OK)
+    public ProductDTO getProductByName(@PathVariable String name) {
+        return productService.getProductByName(name);
+    }
+
+    @PostMapping("/{id}/like")
+    @ResponseStatus(HttpStatus.OK)
+    public void likeProduct(@PathVariable Long id) {
+        productService.likeProduct(id);
+    }
+
+    @PostMapping("{id}/dislike")
+    @ResponseStatus(HttpStatus.OK)
+    public void dislikeProduct(@PathVariable Long id) {
+        productService.dislikeProduct(id);
+    }
 }

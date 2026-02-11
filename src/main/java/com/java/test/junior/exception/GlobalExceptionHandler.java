@@ -30,4 +30,10 @@ public class GlobalExceptionHandler {
     public String handleIllegalArgument(IllegalArgumentException ex) {
         return ex.getMessage();
     }
+
+    @ExceptionHandler(UserNotLoggedInException.class)
+    @ResponseStatus(HttpStatus.UNAUTHORIZED)
+    public String handleUserNotLoggedIn(UserNotLoggedInException ex) {
+        return ex.getMessage();
+    }
 }

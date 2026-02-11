@@ -4,13 +4,18 @@
 
 package com.java.test.junior.service;
 
-import com.java.test.junior.exception.ProductNotFoundException;
 import com.java.test.junior.exception.IllegalArgumentException;
+import com.java.test.junior.exception.ProductNotFoundException;
+import com.java.test.junior.exception.UserNotLoggedInException;
+import com.java.test.junior.mapper.InteractionMapper;
 import com.java.test.junior.mapper.ProductMapper;
+import com.java.test.junior.mapper.UserMapper;
 import com.java.test.junior.model.Product;
 import com.java.test.junior.model.ProductDTO;
+import com.java.test.junior.model.User;
 import lombok.RequiredArgsConstructor;
 import org.apache.ibatis.session.RowBounds;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -26,6 +31,8 @@ import java.util.List;
 public class ProductServiceImpl implements ProductService {
 
     private final ProductMapper productMapper;
+    private final UserMapper userMapper;
+    private final InteractionMapper interactionMapper;
 
     /**
      * @param productDTO this product to be created
@@ -95,5 +102,59 @@ public class ProductServiceImpl implements ProductService {
             throw new IllegalArgumentException("Page and size must be positive");
         }
         return productMapper.getPaginatedProducts(rowBounds);
+    }
+
+    @Override
+    public ProductDTO getProductByName(String name) {
+        Product product = productMapper.getProductByName(name);
+        ProductDTO productDTO = new ProductDTO();
+        productDTO.setName(product.getName());
+        productDTO.setPrice(product.getPrice());
+        productDTO.setDescription(product.getDescription());
+        return productDTO;
+    }
+
+    @Override
+    public void likeProduct(Long productId) {
+        Long userId = getAuthenticatedUserId();
+
+        if (productMapper.findById(productId) == null) {
+            throw new ProductNotFoundException("Product not found");
+        }
+        Boolean currentInteraction = interactionMapper.getExistingInteraction(userId, productId);
+
+        if (currentInteraction != null && currentInteraction) {
+            interactionMapper.removeInteraction(userId, productId);
+        }
+
+        interactionMapper.insertInteraction(userId, productId, true);
+    }
+
+    @Override
+    public void dislikeProduct(Long productId) {
+        Long userId = getAuthenticatedUserId();
+
+        if (productMapper.findById(productId) == null) {
+            throw new ProductNotFoundException("Product not found");
+        }
+
+        Boolean currentInteraction = interactionMapper.getExistingInteraction(userId, productId);
+
+        if (currentInteraction != null && !currentInteraction) {
+            interactionMapper.removeInteraction(userId, productId);
+        }
+
+        interactionMapper.insertInteraction(userId, productId, false);
+    }
+
+    private Long getAuthenticatedUserId() {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+
+        User user = userMapper.findByUsername(username);
+
+        if (user == null) {
+            throw new UserNotLoggedInException("User not logged in");
+        }
+        return user.getId();
     }
 }
