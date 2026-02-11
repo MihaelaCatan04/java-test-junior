@@ -8,7 +8,6 @@
     </select>
 
 
-
     <resultMap id="productResultMapper" type="com.java.test.junior.model.Product">
         <id property="id" column="id"/>
         <result property="name" column="name"/>
@@ -26,22 +25,19 @@
 
     <update id="updateProduct">
         UPDATE product
-        SET
-            name = #{product.name},
-            price = #{product.price},
+        SET name        = #{product.name},
+            price       = #{product.price},
             description = #{product.description}
-        WHERE
-            id = #{id}
+        WHERE id = #{id}
     </update>
     <delete id="deleteProduct">
-        DELETE FROM product
-        WHERE id=#{id}
+        DELETE
+        FROM product
+        WHERE id = #{id}
     </delete>
     <select id="getPaginatedProducts" resultMap="productResultMapperDTO">
         SELECT *
         FROM product
-        LIMIT #{size}
-        OFFSET (#{page} - 1) * #{size}
     </select>
 
     <resultMap id="productResultMapperDTO" type="com.java.test.junior.model.ProductDTO">

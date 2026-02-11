@@ -37,8 +37,7 @@
     </delete>
     <select id="getPaginatedProducts" resultMap="productResultMapperDTO">
         SELECT *
-        FROM product LIMIT #{size}
-        OFFSET (#{page} - 1) * #{size}
+        FROM product
     </select>
 
     <resultMap id="productResultMapperDTO" type="com.java.test.junior.model.ProductDTO">
