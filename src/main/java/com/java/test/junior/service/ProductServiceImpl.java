@@ -4,6 +4,7 @@
 
 package com.java.test.junior.service;
 
+import com.java.test.junior.exception.ProductNotFoundException;
 import com.java.test.junior.mapper.ProductMapper;
 import com.java.test.junior.model.Product;
 import com.java.test.junior.model.ProductDTO;
@@ -49,6 +50,9 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public ProductDTO getProductById(Long id) {
         Product product = productMapper.findById(id);
+        if (product == null) {
+            throw new ProductNotFoundException("Product not found");
+        }
         ProductDTO productDTO = new ProductDTO();
         productDTO.setName(product.getName());
         productDTO.setPrice(product.getPrice());
@@ -59,6 +63,9 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public void modifyProductById(Long id, ProductDTO productDTO) {
         Product productFromDb = productMapper.findById(id);
+        if (productFromDb == null) {
+            throw new ProductNotFoundException("Product not found");
+        }
         productFromDb.setName(productDTO.getName());
         productFromDb.setPrice(productDTO.getPrice());
         productFromDb.setDescription(productDTO.getDescription());
