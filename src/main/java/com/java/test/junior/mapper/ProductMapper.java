@@ -8,6 +8,7 @@ import com.java.test.junior.model.Product;
 import com.java.test.junior.model.ProductDTO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
+import org.apache.ibatis.session.RowBounds;
 
 import java.util.List;
 
@@ -19,13 +20,13 @@ import java.util.List;
 
 @Mapper
 public interface ProductMapper {
-    ProductDTO findById(Long id);
+    Product findById(Long id);
 
     void insert(Product product);
 
-    void updateProduct(@Param("id") Long id, @Param("product") ProductDTO product);
+    void updateProduct(@Param("id") Long id, @Param("product") Product product);
 
     void deleteProduct(Long id);
 
-    List<ProductDTO> getPaginatedProducts(@Param("page") int page, @Param("size") int size);
+    List<ProductDTO> getPaginatedProducts(RowBounds rowBounds);
 }

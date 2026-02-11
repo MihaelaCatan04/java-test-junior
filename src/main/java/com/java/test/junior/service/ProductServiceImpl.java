@@ -4,10 +4,12 @@
 
 package com.java.test.junior.service;
 
+import com.java.test.junior.exception.ProductNotFoundException;
 import com.java.test.junior.mapper.ProductMapper;
 import com.java.test.junior.model.Product;
 import com.java.test.junior.model.ProductDTO;
 import lombok.RequiredArgsConstructor;
+import org.apache.ibatis.session.RowBounds;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -47,12 +49,23 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public ProductDTO getProductById(Long id) {
-        return productMapper.findById(id);
+        Product product = productMapper.findById(id);
+        if (product == null) {
+            throw new ProductNotFoundException("Product not found");
+        }
+        ProductDTO productDTO = new ProductDTO();
+        productDTO.setName(product.getName());
+        productDTO.setPrice(product.getPrice());
+        productDTO.setDescription(product.getDescription());
+        return productDTO;
     }
 
     @Override
     public void modifyProductById(Long id, ProductDTO productDTO) {
-        ProductDTO productFromDb = productMapper.findById(id);
+        Product productFromDb = productMapper.findById(id);
+        if (productFromDb == null) {
+            throw new ProductNotFoundException("Product not found");
+        }
         productFromDb.setName(productDTO.getName());
         productFromDb.setPrice(productDTO.getPrice());
         productFromDb.setDescription(productDTO.getDescription());
@@ -66,6 +79,7 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public List<ProductDTO> getPaginatedProducts(int page, int size) {
-        return productMapper.getPaginatedProducts(page, size);
+        RowBounds rowBounds = new RowBounds((page - 1) * size, size);
+        return productMapper.getPaginatedProducts(rowBounds);
     }
 }
