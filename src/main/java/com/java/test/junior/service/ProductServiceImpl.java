@@ -5,6 +5,7 @@
 package com.java.test.junior.service;
 
 import com.java.test.junior.exception.ProductNotFoundException;
+import com.java.test.junior.exception.IllegalArgumentException;
 import com.java.test.junior.mapper.ProductMapper;
 import com.java.test.junior.model.Product;
 import com.java.test.junior.model.ProductDTO;
@@ -49,6 +50,9 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public ProductDTO getProductById(Long id) {
+        if (id == null || id <= 0) {
+            throw new IllegalArgumentException("Product id must be positive");
+        }
         Product product = productMapper.findById(id);
         if (product == null) {
             throw new ProductNotFoundException("Product not found");
@@ -74,12 +78,22 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public void deleteProductById(Long id) {
+        if (id == null || id <= 0) {
+            throw new IllegalArgumentException("Product id must be positive");
+        }
+        Product productFromDb = productMapper.findById(id);
+        if (productFromDb == null) {
+            throw new ProductNotFoundException("Product not found");
+        }
         productMapper.deleteProduct(id);
     }
 
     @Override
     public List<ProductDTO> getPaginatedProducts(int page, int size) {
         RowBounds rowBounds = new RowBounds((page - 1) * size, size);
+        if (page < 0 || size < 0) {
+            throw new IllegalArgumentException("Page and size must be positive");
+        }
         return productMapper.getPaginatedProducts(rowBounds);
     }
 }

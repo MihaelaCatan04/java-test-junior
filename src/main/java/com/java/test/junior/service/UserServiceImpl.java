@@ -1,5 +1,7 @@
 package com.java.test.junior.service;
 
+import com.java.test.junior.exception.UserAlreadyExistsException;
+import com.java.test.junior.exception.UserNotFoundException;
 import com.java.test.junior.mapper.UserMapper;
 import com.java.test.junior.model.User;
 import com.java.test.junior.model.UserDTO;
@@ -17,7 +19,9 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserDTO findByUsername(String username) {
         User user =  userMapper.findByUsername(username);
-        if (user == null) return null;
+        if (user == null) {
+            throw new UserNotFoundException("User not found");
+        };
 
         UserDTO dto = new UserDTO();
         dto.setUsername(user.getUsername());
@@ -28,7 +32,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public void save(UserDTO userDTO) {
         if (findByUsername(userDTO.getUsername()) != null) {
-            throw new RuntimeException("User already exists!");
+            throw new UserAlreadyExistsException("User already exists!");
         }
 
         User userEntity = new User();
