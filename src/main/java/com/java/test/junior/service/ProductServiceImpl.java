@@ -96,4 +96,14 @@ public class ProductServiceImpl implements ProductService {
         }
         return productMapper.getPaginatedProducts(rowBounds);
     }
+
+    @Override
+    public ProductDTO getProductByName(String name) {
+        Product product = productMapper.getProductByName(name);
+        ProductDTO productDTO = new ProductDTO();
+        productDTO.setName(product.getName());
+        productDTO.setPrice(product.getPrice());
+        productDTO.setDescription(product.getDescription());
+        return productDTO;
+    }
 }

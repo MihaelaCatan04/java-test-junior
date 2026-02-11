@@ -55,4 +55,10 @@ public class ProductController {
     public List<ProductDTO> getPaginatedProducts(@RequestParam("page") int page, @RequestParam("page_size") int size) {
         return productService.getPaginatedProducts(page, size);
     }
+
+    @GetMapping("name/{name}")
+    @ResponseStatus(HttpStatus.OK)
+    public ProductDTO getProductByName( @PathVariable String name) {
+        return productService.getProductByName(name);
+    }
 }

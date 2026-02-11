@@ -45,4 +45,10 @@
         <result property="price" column="price"/>
         <result property="description" column="description"/>
     </resultMap>
+
+    <select id="getProductByName" resultMap="productResultMapper">
+        SELECT *
+        FROM product
+        WHERE name LIKE #{name}
+    </select>
 </mapper>

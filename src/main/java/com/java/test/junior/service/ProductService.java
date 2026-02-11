@@ -27,4 +27,6 @@ public interface ProductService {
     void deleteProductById(Long id);
 
     List<ProductDTO> getPaginatedProducts(int page, int size);
+
+    ProductDTO getProductByName(String name);
 }

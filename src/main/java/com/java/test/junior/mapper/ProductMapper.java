@@ -29,4 +29,6 @@ public interface ProductMapper {
     void deleteProduct(Long id);
 
     List<ProductDTO> getPaginatedProducts(RowBounds rowBounds);
+
+    Product getProductByName(String name);
 }
