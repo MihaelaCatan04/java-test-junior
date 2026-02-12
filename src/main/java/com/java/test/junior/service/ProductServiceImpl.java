@@ -129,8 +129,9 @@ public class ProductServiceImpl implements ProductService {
         Boolean currentInteraction = interactionMapper.getExistingInteraction(userId, productId);
         if (currentInteraction != null && currentInteraction) {
             interactionMapper.removeInteraction(userId, productId);
+        } else {
+            interactionMapper.insertInteraction(userId, productId, true);
         }
-        interactionMapper.insertInteraction(userId, productId, true);
     }
 
     @Override
@@ -140,8 +141,9 @@ public class ProductServiceImpl implements ProductService {
         Boolean currentInteraction = interactionMapper.getExistingInteraction(userId, productId);
         if (currentInteraction != null && !currentInteraction) {
             interactionMapper.removeInteraction(userId, productId);
+        } else {
+            interactionMapper.insertInteraction(userId, productId, false);
         }
-        interactionMapper.insertInteraction(userId, productId, false);
     }
 
     @Override
