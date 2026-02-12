@@ -1,7 +1,7 @@
 package com.java.test.junior.service;
 
-import com.java.test.junior.exception.UserAlreadyExistsException;
-import com.java.test.junior.exception.UserNotFoundException;
+import com.java.test.junior.controller.UserAlreadyExistsException;
+import com.java.test.junior.controller.UserNotFoundException;
 import com.java.test.junior.mapper.UserMapper;
 import com.java.test.junior.model.User;
 import com.java.test.junior.model.UserDTO;

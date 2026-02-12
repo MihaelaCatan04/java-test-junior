@@ -1,4 +1,4 @@
-package com.java.test.junior.exception;
+package com.java.test.junior.controller;
 
 public class UserAlreadyExistsException extends RuntimeException{
     public UserAlreadyExistsException(String message) {
