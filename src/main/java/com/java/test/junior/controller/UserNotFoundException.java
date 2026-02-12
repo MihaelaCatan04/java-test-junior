@@ -1,4 +1,4 @@
-package com.java.test.junior.exception;
+package com.java.test.junior.controller;
 
 public class UserNotFoundException extends RuntimeException{
     public UserNotFoundException(String message) {

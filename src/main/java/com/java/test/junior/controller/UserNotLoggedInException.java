@@ -1,4 +1,4 @@
-package com.java.test.junior.exception;
+package com.java.test.junior.controller;
 
 public class UserNotLoggedInException extends RuntimeException {
     public UserNotLoggedInException(String message) {
