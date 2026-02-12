@@ -6,17 +6,22 @@
         <id property="id" column="id"/>
         <result property="username" column="username"/>
         <result property="password" column="password"/>
+        <result property="role" column="role"/>
     </resultMap>
 
     <select id="findByUsername" resultMap="userResultMap">
-        SELECT id, username, password
+        SELECT id, username, password, role
         FROM users
         WHERE username = #{username}
     </select>
 
     <insert id="save" useGeneratedKeys="true" keyProperty="id" keyColumn="id">
-        INSERT INTO users (username, password)
-        VALUES (#{username}, #{password})
+        INSERT INTO users (username, password, role)
+        VALUES (#{username}, #{password}, #{role})
     </insert>
+
+    <select id="findFirstByRole" resultType="com.java.test.junior.model.User">
+        SELECT * FROM users WHERE role = #{role} LIMIT 1
+    </select>
 
 </mapper>

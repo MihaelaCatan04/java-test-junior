@@ -6,6 +6,7 @@ package com.java.test.junior.service;
 
 import com.java.test.junior.model.ProductDTO;
 
+import java.io.IOException;
 import java.util.List;
 
 /**
@@ -33,4 +34,6 @@ public interface ProductService {
     void likeProduct(Long id);
 
     void dislikeProduct(Long id);
+
+    void loadProductsFromAddress(String fileAddress) throws IOException;
 }

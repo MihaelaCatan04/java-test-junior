@@ -1,7 +1,4 @@
 databaseChangeLog:
-  - changeSet:
-      id: 1
-      author: java-test-junior
   - include:
       file: migration/V1__migrate_table_product.sql
       relativeToChangelogFile: true
@@ -10,4 +7,13 @@ databaseChangeLog:
       relativeToChangelogFile: true
   - include:
       file: migration/V3__migrate_table_product_interactions.sql
+      relativeToChangelogFile: true
+  - include:
+      file: migration/V4__add_role_column.sql
+      relativeToChangelogFile: true
+  - include:
+      file: migration/V5__add_product_constraint.sql
+      relativeToChangelogFile: true
+  - include:
+      file: migration/V6__add_admin_constraint.sql
       relativeToChangelogFile: true
