@@ -18,6 +18,6 @@ public class OpenApiConfig {
                         .description("API documentation for the Junior Test project."))
                         .addSecurityItem(new SecurityRequirement().addList("JavaTestJuniorScheme"))
                         .components(new Components().addSecuritySchemes("JavaTestJuniorScheme", new SecurityScheme()
-                        .name("JavaTestJuniorScheme").type(SecurityScheme.Type.HTTP).scheme("basic")));
+                        .name("JavaTestScheme").type(SecurityScheme.Type.HTTP).scheme("basic")));
     }
 }
