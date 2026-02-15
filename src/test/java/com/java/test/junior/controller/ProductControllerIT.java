@@ -52,7 +52,7 @@ public class ProductControllerIT extends BaseIntegrationTest {
 
         ResponseEntity<ProductDTO> response = authRestTemplate.postForEntity("/products", product, ProductDTO.class);
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
-        
+
     }
 
     @Test
@@ -121,12 +121,7 @@ public class ProductControllerIT extends BaseIntegrationTest {
         updatedProduct.setPrice(19.99);
 
         HttpEntity<ProductDTO> request = new HttpEntity<>(updatedProduct);
-        ResponseEntity<Void> updateResponse = restTemplate.exchange(
-                "/products/1",
-                HttpMethod.PUT,
-                request,
-                Void.class
-        );
+        ResponseEntity<Void> updateResponse = restTemplate.exchange("/products/1", HttpMethod.PUT, request, Void.class);
         assertThat(updateResponse.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
     }
 
@@ -151,12 +146,7 @@ public class ProductControllerIT extends BaseIntegrationTest {
         product.setDescription("Test Description");
         product.setPrice(9.99);
         authRestTemplate.postForEntity("/products", product, ProductDTO.class);
-        ResponseEntity<Void> updateResponse = restTemplate.exchange(
-                "/products/1",
-                HttpMethod.DELETE,
-                null,
-                Void.class
-        );
+        ResponseEntity<Void> updateResponse = restTemplate.exchange("/products/1", HttpMethod.DELETE, null, Void.class);
         assertThat(updateResponse.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
     }
 
@@ -180,12 +170,8 @@ public class ProductControllerIT extends BaseIntegrationTest {
         product.setDescription("Test Description");
         product.setPrice(9.99);
         authRestTemplate.postForEntity("/products", product, ProductDTO.class);
-        ResponseEntity<List<ProductDTO>> response = restTemplate.exchange(
-                "/products?page=1&page_size=1",
-                HttpMethod.GET,
-                null,
-                new ParameterizedTypeReference<List<ProductDTO>>() {}
-        );
+        ResponseEntity<List<ProductDTO>> response = restTemplate.exchange("/products?page=1&page_size=1", HttpMethod.GET, null, new ParameterizedTypeReference<List<ProductDTO>>() {
+        });
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
     }
@@ -263,7 +249,7 @@ public class ProductControllerIT extends BaseIntegrationTest {
         assertThat(dislikeResponse.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
     }
 
-//    @Test
+    //    @Test
 //    void testLoadProductsFromCSV() {
 //        jdbcTemplate.execute("INSERT INTO users (username, password, role) VALUES ('admin', 'pass', 'ADMIN')");
 //        TestRestTemplate authRestTemplate = getAuthRestTemplate("testuser", "password");
