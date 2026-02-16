@@ -1,10 +1,10 @@
 package com.java.test.junior.service;
 
-import com.java.test.junior.model.UserDTO;
-import org.apache.ibatis.annotations.Mapper;
+import com.java.test.junior.model.UserRegistrationDTO;
+import com.java.test.junior.model.UserResponseDTO;
 
 
 public interface UserService {
-    UserDTO findByUsername(String username);
-    void save(UserDTO userDTO);
+    UserResponseDTO findByUsername(String username);
+    UserResponseDTO save(UserRegistrationDTO userRegistrationDTO);
 }

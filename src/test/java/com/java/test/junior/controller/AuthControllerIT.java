@@ -2,7 +2,7 @@ package com.java.test.junior.controller;
 
 import com.java.test.junior.BaseIntegrationTest;
 import com.java.test.junior.mapper.UserMapper;
-import com.java.test.junior.model.UserDTO;
+import com.java.test.junior.model.UserRegistrationDTO;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.web.client.TestRestTemplate;
@@ -20,7 +20,7 @@ class AuthControllerIT extends BaseIntegrationTest {
     private UserMapper userMapper;
 
     private TestRestTemplate getAuthRestTemplate(String username, String password) {
-        UserDTO user = new UserDTO();
+        UserRegistrationDTO user = new UserRegistrationDTO();
         user.setUsername(username);
         user.setPassword(password);
         restTemplate.postForEntity("/auth/register", user, Void.class);
@@ -29,7 +29,7 @@ class AuthControllerIT extends BaseIntegrationTest {
 
     @Test
     void testRegisterNewUserUnauthenticated() {
-        UserDTO user = new UserDTO();
+        UserRegistrationDTO user = new UserRegistrationDTO();
         user.setUsername("unauth_user");
         user.setPassword("pass123");
 
@@ -41,7 +41,7 @@ class AuthControllerIT extends BaseIntegrationTest {
 
     @Test
     void testRegisterWhileAuthenticated() {
-        UserDTO user = new UserDTO();
+        UserRegistrationDTO user = new UserRegistrationDTO();
         user.setUsername("auth_user");
         user.setPassword("pass123");
 
@@ -54,7 +54,7 @@ class AuthControllerIT extends BaseIntegrationTest {
 
     @Test
     void testRegisterSameUserAgainFails() {
-        UserDTO user = new UserDTO();
+        UserRegistrationDTO user = new UserRegistrationDTO();
         user.setUsername("duplicate_user");
         user.setPassword("pass123");
         restTemplate.postForEntity("/auth/register", user, Void.class);

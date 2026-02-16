@@ -3,7 +3,7 @@ package com.java.test.junior.controller;
 import com.java.test.junior.BaseIntegrationTest;
 import com.java.test.junior.model.LoadingDTO;
 import com.java.test.junior.model.ProductDTO;
-import com.java.test.junior.model.UserDTO;
+import com.java.test.junior.model.UserRegistrationDTO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,7 +40,7 @@ public class ProductControllerIT extends BaseIntegrationTest {
     }
 
     private TestRestTemplate getAuthRestTemplate(String username, String password) {
-        UserDTO user = new UserDTO();
+        UserRegistrationDTO user = new UserRegistrationDTO();
         user.setUsername(username);
         user.setPassword(password);
         restTemplate.postForEntity("/auth/register", user, Void.class);

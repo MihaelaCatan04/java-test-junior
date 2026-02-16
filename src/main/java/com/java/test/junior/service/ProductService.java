@@ -19,7 +19,7 @@ public interface ProductService {
      * @param productDTO this product to be created
      * @return the product created from the database
      */
-    ProductDTO createProduct(ProductDTO productDTO);
+    ProductDTO createProduct(ProductDTO productDTO, String username);
 
     ProductDTO getProductById(Long id);
 

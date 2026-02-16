@@ -16,6 +16,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import java.io.IOException;
+import java.security.Principal;
 import java.util.List;
 
 /**
@@ -34,8 +35,8 @@ public class ProductController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     @Operation(summary = "Create a new product")
-    public ProductDTO createProduct(@Valid @RequestBody ProductDTO productDTO) {
-        return productService.createProduct(productDTO);
+    public ProductDTO createProduct(@Valid @RequestBody ProductDTO productDTO, Principal principal) {
+        return productService.createProduct(productDTO, principal.getName());
     }
 
     @GetMapping("/{id}")
