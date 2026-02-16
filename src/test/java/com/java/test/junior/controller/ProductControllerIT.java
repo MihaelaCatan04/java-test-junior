@@ -1,6 +1,7 @@
 package com.java.test.junior.controller;
 
 import com.java.test.junior.BaseIntegrationTest;
+import com.java.test.junior.model.LoadingDTO;
 import com.java.test.junior.model.ProductDTO;
 import com.java.test.junior.model.UserDTO;
 import org.junit.jupiter.api.BeforeEach;
@@ -13,6 +14,8 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.security.crypto.password.PasswordEncoder;
+
 
 import java.io.File;
 import java.util.List;
@@ -25,6 +28,8 @@ public class ProductControllerIT extends BaseIntegrationTest {
     private TestRestTemplate restTemplate;
     @Autowired
     private JdbcTemplate jdbcTemplate;
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     private static TestRestTemplate authRestTemplate;
 
@@ -249,18 +254,31 @@ public class ProductControllerIT extends BaseIntegrationTest {
         assertThat(dislikeResponse.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
     }
 
-    //    @Test
-//    void testLoadProductsFromCSV() {
-//        jdbcTemplate.execute("INSERT INTO users (username, password, role) VALUES ('admin', 'pass', 'ADMIN')");
-//        TestRestTemplate authRestTemplate = getAuthRestTemplate("testuser", "password");
-//
-//        LoadingDTO loadingDTO = new LoadingDTO();
-//        String path = new File("src/test/resources/products.csv").getAbsolutePath();
-//        loadingDTO.setFileAddress(path);
-//
-//        ResponseEntity<Void> response = authRestTemplate.postForEntity("/products/loading/products", loadingDTO, Void.class);
-//        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
-//    }
+    @Test
+    void testLoadProductsFromCSV() {
+        String encodedPassword = passwordEncoder.encode("password");
+
+        jdbcTemplate.update(
+                "INSERT INTO users (username, password, role) VALUES (?, ?, ?)",
+                "testuser",
+                encodedPassword,
+                "ADMIN"
+        );
+
+        TestRestTemplate authRestTemplate =
+                getAuthRestTemplate("testuser", "password");
+
+        LoadingDTO loadingDTO = new LoadingDTO();
+        String path = new File("src/test/resources/products.csv").getAbsolutePath();
+        loadingDTO.setFileAddress(path);
+
+        ResponseEntity<Void> response =
+                authRestTemplate.postForEntity("/products/loading/products", loadingDTO, Void.class);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+    }
+
+
     @Test
     void testGetADeletedProduct() {
         authRestTemplate = getAuthRestTemplate("testuser", "password");
