@@ -52,7 +52,7 @@ public class ProductServiceImpl implements ProductService {
     private static final String COPY_SQL = """
             COPY temp_product (name, price, description) 
             FROM STDIN 
-            WITH (FORMAT CSV, HEADER, QUOTE '\"', DELIMITER ',', ENCODING 'UTF8', NULL '', ON_ERROR IGNORE)""";
+            WITH (FORMAT CSV, HEADER, QUOTE '\"', DELIMITER ',', ENCODING 'UTF8', NULL '')""";
     private static final String CREATE_TEMP_TABLE_SQL = "CREATE TEMP TABLE IF NOT EXISTS temp_product (name TEXT, price NUMERIC, description TEXT)";
     private static final String INSERT_SQL = """
             INSERT INTO product (name, price, description, user_id, created_at, updated_at)

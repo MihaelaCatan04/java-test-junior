@@ -1,5 +1,12 @@
-package com.java.test.junior.controller;
+package com.java.test.junior.controller.handler;
 
+import com.java.test.junior.controller.*;
+import com.java.test.junior.controller.FileNotFoundException;
+import com.java.test.junior.controller.IllegalArgumentException;
+import com.java.test.junior.controller.ProductNotFoundException;
+import com.java.test.junior.controller.UserAlreadyExistsException;
+import com.java.test.junior.controller.UserNotFoundException;
+import com.java.test.junior.controller.UserNotLoggedInException;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -25,7 +32,7 @@ public class GlobalExceptionHandler {
         return ex.getMessage();
     }
 
-    @ExceptionHandler(IllegalArgumentException.class)
+    @ExceptionHandler(com.java.test.junior.controller.IllegalArgumentException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public String handleIllegalArgument(IllegalArgumentException ex) {
         return ex.getMessage();
