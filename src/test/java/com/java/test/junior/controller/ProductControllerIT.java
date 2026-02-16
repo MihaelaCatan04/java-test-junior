@@ -278,6 +278,30 @@ public class ProductControllerIT extends BaseIntegrationTest {
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
     }
 
+    @Test
+    void testLoadProductsFromURL() {
+        String encodedPassword = passwordEncoder.encode("password");
+
+        jdbcTemplate.update(
+                "INSERT INTO users (username, password, role) VALUES (?, ?, ?)",
+                "testuser",
+                encodedPassword,
+                "ADMIN"
+        );
+
+        TestRestTemplate authRestTemplate =
+                getAuthRestTemplate("testuser", "password");
+
+        LoadingDTO loadingDTO = new LoadingDTO();
+        String path = "https://raw.githubusercontent.com/MihaelaCatan04/java-test-junior/main/src/main/resources/products.csv";
+        loadingDTO.setFileAddress(path);
+
+        ResponseEntity<Void> response =
+                authRestTemplate.postForEntity("/products/loading/products", loadingDTO, Void.class);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+    }
+
 
     @Test
     void testGetADeletedProduct() {
