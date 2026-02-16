@@ -15,13 +15,13 @@ A Spring Boot project for the GlobalDatabase internship program. This applicatio
 
 ## Requirements
 
-- Java 11
-- Spring Boot 3.0.0
+- Java 17
+- Spring Boot 3.4.0
 - PostgreSQL 14
 
 ## Getting Started
 
-1. Install Java 11 and PostgreSQL 14.
+1. Install Java 17 and PostgreSQL 14.
 2. Create a PostgreSQL database named `marketplace`.
 3. Clone this repository.
 4. Build the project:
