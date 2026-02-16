@@ -50,10 +50,8 @@ public class ProductControllerIT extends BaseIntegrationTest {
     @Test
     void testCreateProductAuthenticated() {
         authRestTemplate = getAuthRestTemplate("testuser", "password");
-        ProductDTO product = new ProductDTO();
-        product.setName("Test Product");
-        product.setDescription("Test Description");
-        product.setPrice(9.99);
+        ProductDTO product = new ProductDTO("Test Product", 9.99, "Test Description");
+
 
         ResponseEntity<ProductDTO> response = authRestTemplate.postForEntity("/products", product, ProductDTO.class);
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
@@ -62,10 +60,7 @@ public class ProductControllerIT extends BaseIntegrationTest {
 
     @Test
     void testCreateProductUnauthorized() {
-        ProductDTO product = new ProductDTO();
-        product.setName("Test Product");
-        product.setDescription("Test Description");
-        product.setPrice(9.99);
+        ProductDTO product = new ProductDTO("Test Product", 9.99, "Test Description");
 
         ResponseEntity<ProductDTO> response = restTemplate.postForEntity("/products", product, ProductDTO.class);
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
@@ -74,10 +69,7 @@ public class ProductControllerIT extends BaseIntegrationTest {
     @Test
     void testGetProductWhenExists() {
         authRestTemplate = getAuthRestTemplate("testuser", "password");
-        ProductDTO product = new ProductDTO();
-        product.setName("Test Product");
-        product.setDescription("Test Description");
-        product.setPrice(9.99);
+        ProductDTO product = new ProductDTO("Test Product", 9.99, "Test Description");
         authRestTemplate.postForEntity("/products", product, ProductDTO.class);
 
         ResponseEntity<ProductDTO> response = restTemplate.getForEntity("/products/1", ProductDTO.class);
@@ -93,15 +85,9 @@ public class ProductControllerIT extends BaseIntegrationTest {
     @Test
     void testUpdateProductAuthenticated() {
         authRestTemplate = getAuthRestTemplate("testuser", "password");
-        ProductDTO product = new ProductDTO();
-        product.setName("Test Product");
-        product.setDescription("Test Description");
-        product.setPrice(9.99);
+        ProductDTO product = new ProductDTO("Test Product", 9.99, "Test Description");
         authRestTemplate.postForEntity("/products", product, ProductDTO.class);
-        ProductDTO updatedProduct = new ProductDTO();
-        updatedProduct.setName("Updated Product");
-        updatedProduct.setDescription("Updated Description");
-        updatedProduct.setPrice(19.99);
+        ProductDTO updatedProduct = new ProductDTO("Updated Product", 19.99, "Updated Description");
         authRestTemplate.put("/products/1", updatedProduct);
 
         ResponseEntity<ProductDTO> response = restTemplate.getForEntity("/products/1", ProductDTO.class);
@@ -114,16 +100,10 @@ public class ProductControllerIT extends BaseIntegrationTest {
     @Test
     void testUpdateProductUnauthorized() {
         authRestTemplate = getAuthRestTemplate("testuser", "password");
-        ProductDTO product = new ProductDTO();
-        product.setName("Test Product");
-        product.setDescription("Test Description");
-        product.setPrice(9.99);
+        ProductDTO product = new ProductDTO("Test Product", 9.99, "Test Description");
 
         ResponseEntity<ProductDTO> createResponse = authRestTemplate.postForEntity("/products", product, ProductDTO.class);
-        ProductDTO updatedProduct = new ProductDTO();
-        updatedProduct.setName("Updated Product");
-        updatedProduct.setDescription("Updated Description");
-        updatedProduct.setPrice(19.99);
+        ProductDTO updatedProduct = new ProductDTO("Updated Product", 19.99, "Updated Description");
 
         HttpEntity<ProductDTO> request = new HttpEntity<>(updatedProduct);
         ResponseEntity<Void> updateResponse = restTemplate.exchange("/products/1", HttpMethod.PUT, request, Void.class);
@@ -133,10 +113,7 @@ public class ProductControllerIT extends BaseIntegrationTest {
     @Test
     void testDeleteProductAuthenticated() {
         authRestTemplate = getAuthRestTemplate("testuser", "password");
-        ProductDTO product = new ProductDTO();
-        product.setName("Test Product");
-        product.setDescription("Test Description");
-        product.setPrice(9.99);
+        ProductDTO product = new ProductDTO("Test Product", 9.99, "Test Description");
         authRestTemplate.postForEntity("/products", product, ProductDTO.class);
         authRestTemplate.delete("/products/1");
         ResponseEntity<String> response = restTemplate.getForEntity("/products/1", String.class);
@@ -146,10 +123,7 @@ public class ProductControllerIT extends BaseIntegrationTest {
     @Test
     void testDeleteProductUnauthorized() {
         authRestTemplate = getAuthRestTemplate("testuser", "password");
-        ProductDTO product = new ProductDTO();
-        product.setName("Test Product");
-        product.setDescription("Test Description");
-        product.setPrice(9.99);
+        ProductDTO product = new ProductDTO("Test Product", 9.99, "Test Description");
         authRestTemplate.postForEntity("/products", product, ProductDTO.class);
         ResponseEntity<Void> updateResponse = restTemplate.exchange("/products/1", HttpMethod.DELETE, null, Void.class);
         assertThat(updateResponse.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
@@ -158,10 +132,7 @@ public class ProductControllerIT extends BaseIntegrationTest {
     @Test
     void testGetProductsPaginatedAuthenticated() {
         authRestTemplate = getAuthRestTemplate("testuser", "password");
-        ProductDTO product = new ProductDTO();
-        product.setName("Test Product");
-        product.setDescription("Test Description");
-        product.setPrice(9.99);
+        ProductDTO product = new ProductDTO("Test Product", 9.99, "Test Description");
         authRestTemplate.postForEntity("/products", product, ProductDTO.class);
         ResponseEntity<List> response = authRestTemplate.getForEntity("/products?page=1&page_size=1", List.class);
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
@@ -170,10 +141,7 @@ public class ProductControllerIT extends BaseIntegrationTest {
     @Test
     void testGetProductsPaginatedUnauthorized() {
         authRestTemplate = getAuthRestTemplate("testuser", "password");
-        ProductDTO product = new ProductDTO();
-        product.setName("Test Product");
-        product.setDescription("Test Description");
-        product.setPrice(9.99);
+        ProductDTO product = new ProductDTO("Test Product", 9.99, "Test Description");
         authRestTemplate.postForEntity("/products", product, ProductDTO.class);
         ResponseEntity<List<ProductDTO>> response = restTemplate.exchange("/products?page=1&page_size=1", HttpMethod.GET, null, new ParameterizedTypeReference<List<ProductDTO>>() {
         });
@@ -185,10 +153,7 @@ public class ProductControllerIT extends BaseIntegrationTest {
     @Test
     void testGetProductByNameAuthenticated() {
         authRestTemplate = getAuthRestTemplate("testuser", "password");
-        ProductDTO product = new ProductDTO();
-        product.setName("TestProduct");
-        product.setDescription("Test Description");
-        product.setPrice(9.99);
+        ProductDTO product = new ProductDTO("Test Product", 9.99, "Test Description");
         authRestTemplate.postForEntity("/products", product, ProductDTO.class);
         ResponseEntity<ProductDTO> response = authRestTemplate.getForEntity("/products/name/TestProduct", ProductDTO.class);
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
@@ -197,10 +162,7 @@ public class ProductControllerIT extends BaseIntegrationTest {
     @Test
     void testGetProductByNameUnauthorized() {
         authRestTemplate = getAuthRestTemplate("testuser", "password");
-        ProductDTO product = new ProductDTO();
-        product.setName("TestProduct");
-        product.setDescription("Test Description");
-        product.setPrice(9.99);
+        ProductDTO product = new ProductDTO("Test Product", 9.99, "Test Description");
         authRestTemplate.postForEntity("/products", product, ProductDTO.class);
         ResponseEntity<ProductDTO> response = restTemplate.getForEntity("/products/name/TestProduct", ProductDTO.class);
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
@@ -209,10 +171,7 @@ public class ProductControllerIT extends BaseIntegrationTest {
     @Test
     void testLikeProductAuthenticated() {
         authRestTemplate = getAuthRestTemplate("testuser", "password");
-        ProductDTO product = new ProductDTO();
-        product.setName("Test Product");
-        product.setDescription("Test Description");
-        product.setPrice(9.99);
+        ProductDTO product = new ProductDTO("Test Product", 9.99, "Test Description");
         authRestTemplate.postForEntity("/products", product, ProductDTO.class);
         ResponseEntity<Void> likeResponse = authRestTemplate.postForEntity("/products/1/like", null, Void.class);
         assertThat(likeResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
@@ -221,10 +180,7 @@ public class ProductControllerIT extends BaseIntegrationTest {
     @Test
     void testLikeProductUnauthorized() {
         authRestTemplate = getAuthRestTemplate("testuser", "password");
-        ProductDTO product = new ProductDTO();
-        product.setName("Test Product");
-        product.setDescription("Test Description");
-        product.setPrice(9.99);
+        ProductDTO product = new ProductDTO("Test Product", 9.99, "Test Description");
         authRestTemplate.postForEntity("/products", product, ProductDTO.class);
         ResponseEntity<Void> likeResponse = restTemplate.postForEntity("/products/1/like", null, Void.class);
         assertThat(likeResponse.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
@@ -233,10 +189,7 @@ public class ProductControllerIT extends BaseIntegrationTest {
     @Test
     void testDislikeProductAuthenticated() {
         authRestTemplate = getAuthRestTemplate("testuser", "password");
-        ProductDTO product = new ProductDTO();
-        product.setName("Test Product");
-        product.setDescription("Test Description");
-        product.setPrice(9.99);
+        ProductDTO product = new ProductDTO("Test Product", 9.99, "Test Description");
         authRestTemplate.postForEntity("/products", product, ProductDTO.class);
         ResponseEntity<Void> dislikeResponse = authRestTemplate.postForEntity("/products/1/dislike", null, Void.class);
         assertThat(dislikeResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
@@ -245,10 +198,7 @@ public class ProductControllerIT extends BaseIntegrationTest {
     @Test
     void testDislikeProductUnauthorized() {
         authRestTemplate = getAuthRestTemplate("testuser", "password");
-        ProductDTO product = new ProductDTO();
-        product.setName("Test Product");
-        product.setDescription("Test Description");
-        product.setPrice(9.99);
+        ProductDTO product = new ProductDTO("Test Product", 9.99, "Test Description");
         authRestTemplate.postForEntity("/products", product, ProductDTO.class);
         ResponseEntity<Void> dislikeResponse = restTemplate.postForEntity("/products/1/dislike", null, Void.class);
         assertThat(dislikeResponse.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
@@ -268,9 +218,7 @@ public class ProductControllerIT extends BaseIntegrationTest {
         TestRestTemplate authRestTemplate =
                 getAuthRestTemplate("testuser", "password");
 
-        LoadingDTO loadingDTO = new LoadingDTO();
-        String path = new File("src/test/resources/products.csv").getAbsolutePath();
-        loadingDTO.setFileAddress(path);
+        LoadingDTO loadingDTO = new LoadingDTO("src/test/resources/products.csv");
 
         ResponseEntity<Void> response =
                 authRestTemplate.postForEntity("/products/loading/products", loadingDTO, Void.class);
@@ -292,9 +240,7 @@ public class ProductControllerIT extends BaseIntegrationTest {
         TestRestTemplate authRestTemplate =
                 getAuthRestTemplate("testuser", "password");
 
-        LoadingDTO loadingDTO = new LoadingDTO();
-        String path = "https://raw.githubusercontent.com/MihaelaCatan04/java-test-junior/main/src/main/resources/products.csv";
-        loadingDTO.setFileAddress(path);
+        LoadingDTO loadingDTO = new LoadingDTO("https://raw.githubusercontent.com/MihaelaCatan04/java-test-junior/main/src/main/resources/products.csv");
 
         ResponseEntity<Void> response =
                 authRestTemplate.postForEntity("/products/loading/products", loadingDTO, Void.class);
@@ -306,10 +252,7 @@ public class ProductControllerIT extends BaseIntegrationTest {
     @Test
     void testGetADeletedProduct() {
         authRestTemplate = getAuthRestTemplate("testuser", "password");
-        ProductDTO product = new ProductDTO();
-        product.setName("Test Product");
-        product.setDescription("Test Description");
-        product.setPrice(9.99);
+        ProductDTO product = new ProductDTO("Test Product", 9.99, "Test Description");
         authRestTemplate.postForEntity("/products", product, ProductDTO.class);
         authRestTemplate.delete("/products/1");
         ResponseEntity<String> response = authRestTemplate.getForEntity("/products/1", String.class);
@@ -319,10 +262,7 @@ public class ProductControllerIT extends BaseIntegrationTest {
     @Test
     void testLikeADeletedProduct() {
         authRestTemplate = getAuthRestTemplate("testuser", "password");
-        ProductDTO product = new ProductDTO();
-        product.setName("Test Product");
-        product.setDescription("Test Description");
-        product.setPrice(9.99);
+        ProductDTO product = new ProductDTO("Test Product", 9.99, "Test Description");
         authRestTemplate.postForEntity("/products", product, ProductDTO.class);
         authRestTemplate.delete("/products/1");
         ResponseEntity<String> response = authRestTemplate.postForEntity("/products/1/like", null, String.class);
@@ -332,10 +272,7 @@ public class ProductControllerIT extends BaseIntegrationTest {
     @Test
     void testDislikeADeletedProduct() {
         authRestTemplate = getAuthRestTemplate("testuser", "password");
-        ProductDTO product = new ProductDTO();
-        product.setName("Test Product");
-        product.setDescription("Test Description");
-        product.setPrice(9.99);
+        ProductDTO product = new ProductDTO("Test Product", 9.99, "Test Description");
         authRestTemplate.postForEntity("/products", product, ProductDTO.class);
         authRestTemplate.delete("/products/1");
         ResponseEntity<String> response = authRestTemplate.postForEntity("/products/1/dislike", null, String.class);
@@ -345,10 +282,7 @@ public class ProductControllerIT extends BaseIntegrationTest {
     @Test
     void testLikeAProductThatIsNotLiked() {
         authRestTemplate = getAuthRestTemplate("testuser", "password");
-        ProductDTO product = new ProductDTO();
-        product.setName("Test Product");
-        product.setDescription("Test Description");
-        product.setPrice(9.99);
+        ProductDTO product = new ProductDTO("Test Product", 9.99, "Test Description");
         authRestTemplate.postForEntity("/products", product, ProductDTO.class);
         ResponseEntity<String> response = authRestTemplate.postForEntity("/products/1/like", null, String.class);
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
@@ -357,10 +291,7 @@ public class ProductControllerIT extends BaseIntegrationTest {
     @Test
     void testDislikeAProductThatIsNotDisliked() {
         authRestTemplate = getAuthRestTemplate("testuser", "password");
-        ProductDTO product = new ProductDTO();
-        product.setName("Test Product");
-        product.setDescription("Test Description");
-        product.setPrice(9.99);
+        ProductDTO product = new ProductDTO("Test Product", 9.99, "Test Description");
         authRestTemplate.postForEntity("/products", product, ProductDTO.class);
         ResponseEntity<String> response = authRestTemplate.postForEntity("/products/1/dislike", null, String.class);
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);

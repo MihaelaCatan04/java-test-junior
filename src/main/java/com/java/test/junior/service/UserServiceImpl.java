@@ -24,10 +24,7 @@ public class UserServiceImpl implements UserService {
             throw new UserNotFoundException("User not found");
         };
 
-        UserResponseDTO dto = new UserResponseDTO();
-        dto.setUsername(user.getUsername());
-        dto.setId(user.getId());
-        dto.setRole(user.getRole());
+        UserResponseDTO dto = new UserResponseDTO(user.getId(), user.getUsername(), user.getRole());
         return dto;
     }
 
