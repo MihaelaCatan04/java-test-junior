@@ -4,10 +4,10 @@
 
 package com.java.test.junior.service;
 
-import com.java.test.junior.controller.FileNotFoundException;
-import com.java.test.junior.controller.IllegalArgumentException;
-import com.java.test.junior.controller.ProductNotFoundException;
-import com.java.test.junior.controller.UserNotLoggedInException;
+import com.java.test.junior.exception.FileNotFoundException;
+import com.java.test.junior.exception.IllegalArgumentException;
+import com.java.test.junior.exception.ProductNotFoundException;
+import com.java.test.junior.exception.UserNotLoggedInException;
 import com.java.test.junior.mapper.InteractionMapper;
 import com.java.test.junior.mapper.ProductMapper;
 import com.java.test.junior.mapper.UserMapper;
