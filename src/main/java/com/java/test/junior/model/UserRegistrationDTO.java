@@ -7,7 +7,7 @@ import lombok.Setter;
 
 @Setter
 @Getter
-public class UserDTO {
+public class UserRegistrationDTO {
     @NotBlank(message = "Username is required")
     @Size(min = 4, message = "Username must be at least 4 characters")
     private String username;

@@ -4,7 +4,8 @@ import com.java.test.junior.exception.UserAlreadyExistsException;
 import com.java.test.junior.exception.UserNotFoundException;
 import com.java.test.junior.mapper.UserMapper;
 import com.java.test.junior.model.User;
-import com.java.test.junior.model.UserDTO;
+import com.java.test.junior.model.UserRegistrationDTO;
+import com.java.test.junior.model.UserResponseDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -17,29 +18,31 @@ public class UserServiceImpl implements UserService {
     private final UserMapper userMapper;
 
     @Override
-    public UserDTO findByUsername(String username) {
+    public UserResponseDTO findByUsername(String username) {
         User user =  userMapper.findByUsername(username);
         if (user == null) {
             throw new UserNotFoundException("User not found");
         };
 
-        UserDTO dto = new UserDTO();
+        UserResponseDTO dto = new UserResponseDTO();
         dto.setUsername(user.getUsername());
-        dto.setPassword(user.getPassword());
+        dto.setId(user.getId());
+        dto.setRole(user.getRole());
         return dto;
     }
 
     @Override
-    public void save(UserDTO userDTO) {
+    public UserResponseDTO save(UserRegistrationDTO userRegistrationDTO) {
         try {
-            findByUsername(userDTO.getUsername());
+            findByUsername(userRegistrationDTO.getUsername());
             throw new UserAlreadyExistsException("User already exists!");
         } catch (UserNotFoundException e) {
             User userEntity = new User();
-            userEntity.setUsername(userDTO.getUsername());
-            userEntity.setPassword(passwordEncoder.encode(userDTO.getPassword()));
+            userEntity.setUsername(userRegistrationDTO.getUsername());
+            userEntity.setPassword(passwordEncoder.encode(userRegistrationDTO.getPassword()));
             userEntity.setRole("USER");
             userMapper.save(userEntity);
         }
+        return findByUsername(userRegistrationDTO.getUsername());
     }
 }

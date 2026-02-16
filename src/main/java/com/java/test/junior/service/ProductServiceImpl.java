@@ -14,6 +14,7 @@ import com.java.test.junior.mapper.UserMapper;
 import com.java.test.junior.model.Product;
 import com.java.test.junior.model.ProductDTO;
 import com.java.test.junior.model.User;
+import com.java.test.junior.model.UserResponseDTO;
 import lombok.RequiredArgsConstructor;
 import org.apache.ibatis.session.RowBounds;
 import org.postgresql.copy.CopyManager;
@@ -65,18 +66,22 @@ public class ProductServiceImpl implements ProductService {
     private final InteractionMapper interactionMapper;
     private final PasswordEncoder passwordEncoder;
     private final DataSource dataSource;
+    private final UserService userService;
+
     @Value("${app.admin.default-username}")
     private String defaultAdminUsername;
     @Value("${app.admin.default-password}")
     private String defaultAdminPassword;
 
+
     @Override
-    public ProductDTO createProduct(ProductDTO productDTO) {
+    public ProductDTO createProduct(ProductDTO productDTO, String username) {
         Product product = new Product();
         product.setName(productDTO.getName());
         product.setPrice(productDTO.getPrice());
         product.setDescription(productDTO.getDescription());
-        product.setUserId(1L);
+        Long userId = userService.findByUsername(username).getId();
+        product.setUserId(userId);
         product.setCreatedAt(LocalDateTime.now());
         product.setUpdatedAt(LocalDateTime.now());
         productMapper.insert(product);
