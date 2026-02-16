@@ -45,4 +45,5 @@ public class UserServiceImpl implements UserService {
         }
         return findByUsername(userRegistrationDTO.getUsername());
     }
+
 }

@@ -24,4 +24,9 @@
         SELECT * FROM users WHERE role = #{role} LIMIT 1
     </select>
 
+    <select id="findUsernameById" resultType="String">
+        SELECT username
+        FROM users
+        WHERE id = #{id}
+    </select>
 </mapper>

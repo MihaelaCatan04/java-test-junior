@@ -40,6 +40,7 @@ public class Product {
 
     @NotNull
     private Long userId;
+
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

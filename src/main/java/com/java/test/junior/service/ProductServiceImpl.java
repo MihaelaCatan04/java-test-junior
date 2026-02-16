@@ -4,22 +4,15 @@
 
 package com.java.test.junior.service;
 
-import com.java.test.junior.exception.FileNotFoundException;
+import com.java.test.junior.exception.*;
 import com.java.test.junior.exception.IllegalArgumentException;
-import com.java.test.junior.exception.ProductNotFoundException;
-import com.java.test.junior.exception.UserNotLoggedInException;
 import com.java.test.junior.mapper.InteractionMapper;
 import com.java.test.junior.mapper.ProductMapper;
 import com.java.test.junior.mapper.UserMapper;
-import com.java.test.junior.model.Product;
-import com.java.test.junior.model.ProductDTO;
-import com.java.test.junior.model.User;
-import com.java.test.junior.model.UserResponseDTO;
+import com.java.test.junior.model.*;
 import lombok.RequiredArgsConstructor;
-import org.apache.ibatis.session.RowBounds;
 import org.postgresql.copy.CopyManager;
 import org.postgresql.core.BaseConnection;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -35,6 +28,7 @@ import java.sql.PreparedStatement;
 import java.sql.Statement;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * @author dumitru.beselea
@@ -68,67 +62,80 @@ public class ProductServiceImpl implements ProductService {
     private final DataSource dataSource;
     private final UserService userService;
 
-    @Value("${app.admin.default-username}")
-    private String defaultAdminUsername;
-    @Value("${app.admin.default-password}")
-    private String defaultAdminPassword;
-
 
     @Override
-    public ProductDTO createProduct(ProductDTO productDTO, String username) {
+    public ProductResponseDTO createProduct(ProductDTO productDTO) {
         Product product = new Product();
         product.setName(productDTO.getName());
         product.setPrice(productDTO.getPrice());
         product.setDescription(productDTO.getDescription());
-        Long userId = userService.findByUsername(username).getId();
+        Long userId = getAuthenticatedUserId();
         product.setUserId(userId);
         product.setCreatedAt(LocalDateTime.now());
         product.setUpdatedAt(LocalDateTime.now());
         productMapper.insert(product);
-        return mapToDTO(product);
+        return mapToResponseDTO(product);
     }
 
     @Override
-    public ProductDTO getProductById(Long id) {
+    public ProductResponseDTO getProductById(Long id) {
         if (id == null || id <= 0) throw new IllegalArgumentException("Product id must be positive");
         Product product = productMapper.findById(id);
         if (product == null) throw new ProductNotFoundException("Product not found");
-        return mapToDTO(product);
+        return mapToResponseDTO(product);
     }
 
     @Override
-    public void modifyProductById(Long id, ProductDTO productDTO) {
+    public ProductResponseDTO modifyProductById(Long id, ProductDTO productDTO, String username) {
+        if (id == null || id <= 0) throw new IllegalArgumentException("Product id must be positive");
         Product productFromDb = productMapper.findById(id);
         if (productFromDb == null) throw new ProductNotFoundException("Product not found");
+        UserResponseDTO currentUser = userService.findByUsername(username);
+        boolean isOwner = Objects.equals(productFromDb.getUserId(), currentUser.getId());
+        boolean isAdmin = "ADMIN".equals(currentUser.getRole());
+        if (!isOwner && !isAdmin) throw new UserAccessDeniedException("You do not have permission to modify this product");
         productFromDb.setName(productDTO.getName());
         productFromDb.setPrice(productDTO.getPrice());
         productFromDb.setDescription(productDTO.getDescription());
         productMapper.updateProduct(id, productFromDb);
+        return mapToResponseDTO(productFromDb);
     }
 
     @Override
-    public void deleteProductById(Long id) {
+    public void deleteProductById(Long id, String username) {
         if (id == null || id <= 0) throw new IllegalArgumentException("Product id must be positive");
-        if (productMapper.findById(id) == null) throw new ProductNotFoundException("Product not found");
+        Product productFromDb = productMapper.findById(id);
+        if (productFromDb == null) throw new ProductNotFoundException("Product not found");
+        UserResponseDTO currentUser = userService.findByUsername(username);
+        boolean isOwner = Objects.equals(productFromDb.getUserId(), currentUser.getId());
+        boolean isAdmin = "ADMIN".equals(currentUser.getRole());
+        if (!isOwner && !isAdmin) throw new UserAccessDeniedException("You do not have permission to delete this product");
         productMapper.deleteProduct(id);
     }
 
     @Override
-    public List<ProductDTO> getPaginatedProducts(int page, int size) {
+    public PageResponse<ProductResponseDTO> getPaginatedProducts(int page, int size) {
         if (page < 1 || size < 1) throw new IllegalArgumentException("Page and size must be positive");
-        RowBounds rowBounds = new RowBounds((page - 1) * size, size);
-        return productMapper.getPaginatedProducts(rowBounds);
+        Long totalCount = productMapper.countProducts();
+        int totalPages = (int) Math.ceil((double) totalCount / size);
+        if (totalPages < page) {
+            throw new PageExceedsLimit("Page " + page + " does not exist");
+        }
+        int offset = (page - 1) * size;
+        List<Product> products = productMapper.getPaginatedProducts(offset, size);
+        List<ProductResponseDTO> productDTOS = products.stream().map(this::mapToResponseDTO).toList();
+        return new PageResponse<>(productDTOS, page, size, totalCount, totalPages);
     }
 
     @Override
-    public ProductDTO getProductByName(String name) {
-        Product product = productMapper.getProductByName(name);
-        if (product == null) throw new ProductNotFoundException("Product not found: " + name);
-        return mapToDTO(product);
+
+    public List<ProductResponseDTO> getProductByName(String name) {
+        List<Product> product = productMapper.getProductByName(name);
+        return product.stream().map(this::mapToResponseDTO).toList();
     }
 
     @Override
-    public void likeProduct(Long productId) {
+    public int likeProduct(Long productId) {
         Long userId = getAuthenticatedUserId();
         if (productMapper.findById(productId) == null) throw new ProductNotFoundException("Product not found");
         Boolean currentInteraction = interactionMapper.getExistingInteraction(userId, productId);
@@ -137,10 +144,11 @@ public class ProductServiceImpl implements ProductService {
         } else {
             interactionMapper.insertInteraction(userId, productId, true);
         }
+        return interactionMapper.getLikeCount(productId);
     }
 
     @Override
-    public void dislikeProduct(Long productId) {
+    public int dislikeProduct(Long productId) {
         Long userId = getAuthenticatedUserId();
         if (productMapper.findById(productId) == null) throw new ProductNotFoundException("Product not found");
         Boolean currentInteraction = interactionMapper.getExistingInteraction(userId, productId);
@@ -149,14 +157,21 @@ public class ProductServiceImpl implements ProductService {
         } else {
             interactionMapper.insertInteraction(userId, productId, false);
         }
+        return interactionMapper.getDislikeCount(productId);
     }
 
     @Override
     @Transactional
     public void loadProductsFromAddress(String fileAddress) {
-        Long adminId = getAdminId();
+        User admin = userMapper.findFirstByRole("ADMIN");
+        if (admin == null) {
+            throw new RuntimeException("System error: Admin account not found. Please contact support.");
+        }
 
-        try (InputStream inputStream = getInputStreamFromUrl(fileAddress); Connection conn = dataSource.getConnection()) {
+        Long adminId = admin.getId();
+
+        try (InputStream inputStream = getInputStreamFromUrl(fileAddress);
+             Connection conn = dataSource.getConnection()) {
 
             BaseConnection pgConn = conn.unwrap(BaseConnection.class);
             CopyManager copyManager = new CopyManager(pgConn);
@@ -169,14 +184,12 @@ public class ProductServiceImpl implements ProductService {
                     pstmt.setLong(1, adminId);
                     pstmt.executeUpdate();
                 }
-
                 stmt.execute(DROP_TABLE);
             }
         } catch (Exception e) {
             throw new RuntimeException("Bulk load failed: " + e.getMessage(), e);
         }
     }
-
     private InputStream getInputStreamFromUrl(String fileAddress) {
         try {
             if (fileAddress.startsWith("http")) {
@@ -189,19 +202,6 @@ public class ProductServiceImpl implements ProductService {
         }
     }
 
-    private Long getAdminId() {
-        User admin = userMapper.findFirstByRole("ADMIN");
-        if (admin == null) {
-            admin = new User();
-            admin.setUsername(defaultAdminUsername);
-            admin.setPassword(passwordEncoder.encode(defaultAdminPassword));
-            admin.setRole("ADMIN");
-            userMapper.save(admin);
-            admin = userMapper.findFirstByRole("ADMIN");
-        }
-        return admin.getId();
-    }
-
     private Long getAuthenticatedUserId() {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = userMapper.findByUsername(username);
@@ -209,11 +209,15 @@ public class ProductServiceImpl implements ProductService {
         return user.getId();
     }
 
-    private ProductDTO mapToDTO(Product product) {
-        ProductDTO dto = new ProductDTO();
-        dto.setName(product.getName());
-        dto.setPrice(product.getPrice());
-        dto.setDescription(product.getDescription());
-        return dto;
+    private String getUsernameById(Long id) {
+        return userMapper.findUsernameById(id);
     }
+
+    private ProductResponseDTO mapToResponseDTO(Product product) {
+        return new ProductResponseDTO(product.getId(), product.getName(), product.getPrice(),
+                product.getDescription(), product.getUserId(), getUsernameById(product.getUserId()));
+    }
+
+
+
 }

@@ -4,7 +4,9 @@
 
 package com.java.test.junior.service;
 
+import com.java.test.junior.model.PageResponse;
 import com.java.test.junior.model.ProductDTO;
+import com.java.test.junior.model.ProductResponseDTO;
 
 import java.io.IOException;
 import java.util.List;
@@ -19,21 +21,21 @@ public interface ProductService {
      * @param productDTO this product to be created
      * @return the product created from the database
      */
-    ProductDTO createProduct(ProductDTO productDTO, String username);
+    ProductResponseDTO createProduct(ProductDTO productDTO);
 
-    ProductDTO getProductById(Long id);
+    ProductResponseDTO getProductById(Long id);
 
-    void modifyProductById(Long id, ProductDTO productDTO);
+    ProductResponseDTO modifyProductById(Long id, ProductDTO productDTO, String username);
 
-    void deleteProductById(Long id);
+    void deleteProductById(Long id, String username);
 
-    List<ProductDTO> getPaginatedProducts(int page, int size);
+    PageResponse<ProductResponseDTO> getPaginatedProducts(int page, int size);
 
-    ProductDTO getProductByName(String name);
+    List<ProductResponseDTO> getProductByName(String name);
 
-    void likeProduct(Long id);
+    int likeProduct(Long id);
 
-    void dislikeProduct(Long id);
+    int dislikeProduct(Long id);
 
     void loadProductsFromAddress(String fileAddress) throws IOException;
 }

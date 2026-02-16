@@ -10,4 +10,6 @@ public interface UserMapper {
     void save(User user);
 
     User findFirstByRole(String role);
+
+    String findUsernameById(Long id);
 }
