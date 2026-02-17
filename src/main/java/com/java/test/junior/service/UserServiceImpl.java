@@ -30,6 +30,7 @@ public class UserServiceImpl implements UserService {
         UserResponseDTO dto = new UserResponseDTO(user.getId(), user.getUsername(), user.getRole());
         return dto;
     }
+
     @Override
     public UserResponseDTO save(UserRegistrationDTO userRegistrationDTO, String username) {
         try {

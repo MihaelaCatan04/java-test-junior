@@ -9,7 +9,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.GeneratedValue;
 
 
-
 @Getter
 @Setter
 @ToString

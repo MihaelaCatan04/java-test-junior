@@ -93,7 +93,8 @@ public class ProductServiceImpl implements ProductService {
         UserResponseDTO currentUser = userService.findByUsername(username);
         boolean isOwner = Objects.equals(productFromDb.getUserId(), currentUser.getId());
         boolean isAdmin = "ADMIN".equals(currentUser.getRole());
-        if (!isOwner && !isAdmin) throw new UserAccessDeniedException("You do not have permission to modify this product");
+        if (!isOwner && !isAdmin)
+            throw new UserAccessDeniedException("You do not have permission to modify this product");
         productFromDb.setName(productDTO.getName());
         productFromDb.setPrice(productDTO.getPrice());
         productFromDb.setDescription(productDTO.getDescription());
@@ -109,7 +110,8 @@ public class ProductServiceImpl implements ProductService {
         UserResponseDTO currentUser = userService.findByUsername(username);
         boolean isOwner = Objects.equals(productFromDb.getUserId(), currentUser.getId());
         boolean isAdmin = "ADMIN".equals(currentUser.getRole());
-        if (!isOwner && !isAdmin) throw new UserAccessDeniedException("You do not have permission to delete this product");
+        if (!isOwner && !isAdmin)
+            throw new UserAccessDeniedException("You do not have permission to delete this product");
         productMapper.deleteProduct(id);
     }
 
@@ -175,8 +177,7 @@ public class ProductServiceImpl implements ProductService {
             throw new UserForbiddenException("Only admin can load products");
         }
 
-        try (InputStream inputStream = getInputStreamFromUrl(fileAddress);
-             Connection conn = dataSource.getConnection()) {
+        try (InputStream inputStream = getInputStreamFromUrl(fileAddress); Connection conn = dataSource.getConnection()) {
 
             BaseConnection pgConn = conn.unwrap(BaseConnection.class);
             CopyManager copyManager = new CopyManager(pgConn);
@@ -195,6 +196,7 @@ public class ProductServiceImpl implements ProductService {
             throw new RuntimeException("Bulk load failed: " + e.getMessage(), e);
         }
     }
+
     private InputStream getInputStreamFromUrl(String fileAddress) {
         try {
             if (fileAddress.startsWith("http")) {
@@ -219,10 +221,8 @@ public class ProductServiceImpl implements ProductService {
     }
 
     private ProductResponseDTO mapToResponseDTO(Product product) {
-        return new ProductResponseDTO(product.getId(), product.getName(), product.getPrice(),
-                product.getDescription(), product.getUserId(), getUsernameById(product.getUserId()));
+        return new ProductResponseDTO(product.getId(), product.getName(), product.getPrice(), product.getDescription(), product.getUserId(), getUsernameById(product.getUserId()));
     }
-
 
 
 }
