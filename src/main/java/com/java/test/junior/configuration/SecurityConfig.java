@@ -27,7 +27,7 @@ public class SecurityConfig {
                 )
                 .exceptionHandling(exception -> exception
                         .authenticationEntryPoint((request, response, authException) -> {
-                            response.sendError(HttpServletResponse.SC_FORBIDDEN, "Access Denied");
+                            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Access Denied");
                         })
                 )
                 .httpBasic(Customizer.withDefaults());
