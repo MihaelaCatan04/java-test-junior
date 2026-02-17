@@ -24,7 +24,8 @@ public class AuthController {
     @PostMapping("/register")
     @Operation(summary = "Register a new user")
     @ResponseStatus(HttpStatus.CREATED)
-    public UserResponseDTO register(@Valid @RequestBody UserRegistrationDTO userRegistrationDTO) {
-        return userService.save(userRegistrationDTO);
+    public UserResponseDTO register(@Valid @RequestBody UserRegistrationDTO userRegistrationDTO, Principal principal) {
+        String currentUsername = (principal != null) ? principal.getName() : null;
+        return userService.save(userRegistrationDTO, currentUsername);
     }
 }

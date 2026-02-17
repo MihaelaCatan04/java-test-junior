@@ -58,4 +58,10 @@ public class GlobalExceptionHandler {
     public ErrorResponse handlePageExceedsLimit(PageExceedsLimit ex) {
         return new ErrorResponse("BAD_REQUEST", ex.getMessage());
     }
+
+    @ExceptionHandler(IllegalActionException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse handleIllegalAction(IllegalActionException ex) {
+        return new ErrorResponse("BAD_REQUEST", ex.getMessage());
+    }
 }

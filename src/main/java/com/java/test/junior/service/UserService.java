@@ -6,5 +6,5 @@ import com.java.test.junior.model.UserResponseDTO;
 
 public interface UserService {
     UserResponseDTO findByUsername(String username);
-    UserResponseDTO save(UserRegistrationDTO userRegistrationDTO);
+    UserResponseDTO save(UserRegistrationDTO userRegistrationDTO, String username);
 }
