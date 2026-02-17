@@ -35,20 +35,21 @@
         FROM product
         WHERE id = #{id}
     </delete>
-    <select id="getPaginatedProducts" resultMap="productResultMapperDTO">
+    <select id="getPaginatedProducts" resultMap="productResultMapper">
         SELECT *
         FROM product
+        ORDER BY created_at ASC
+        LIMIT #{size} OFFSET #{offset}
     </select>
-
-    <resultMap id="productResultMapperDTO" type="com.java.test.junior.model.ProductDTO">
-        <result property="name" column="name"/>
-        <result property="price" column="price"/>
-        <result property="description" column="description"/>
-    </resultMap>
 
     <select id="getProductByName" resultMap="productResultMapper">
         SELECT *
         FROM product
-        WHERE name LIKE #{name}
+        WHERE name LIKE CONCAT('%', #{name}, '%')
+    </select>
+
+    <select id="countProducts" resultType="Long">
+        SELECt COUNT(*)
+        FROM product
     </select>
 </mapper>

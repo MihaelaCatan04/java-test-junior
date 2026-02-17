@@ -14,4 +14,7 @@ public interface InteractionMapper {
 
     void removeInteraction(@Param("userId") Long userId,
                            @Param("productId") Long productId);
+
+    int getLikeCount(@Param("productId") Long productId);
+    int getDislikeCount(@Param("productId") Long productId);
 }

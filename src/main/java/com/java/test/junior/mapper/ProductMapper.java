@@ -6,6 +6,7 @@ package com.java.test.junior.mapper;
 
 import com.java.test.junior.model.Product;
 import com.java.test.junior.model.ProductDTO;
+import com.java.test.junior.model.ProductResponseDTO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.session.RowBounds;
@@ -28,7 +29,11 @@ public interface ProductMapper {
 
     void deleteProduct(Long id);
 
-    List<ProductDTO> getPaginatedProducts(RowBounds rowBounds);
+    List<Product> getPaginatedProducts(int offset, int size);
 
-    Product getProductByName(String name);
+    List<Product> getProductByName(String name);
+
+    Long countProducts();
+
+
 }

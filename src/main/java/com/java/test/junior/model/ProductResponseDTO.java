@@ -7,8 +7,11 @@ import lombok.Setter;
 @Setter
 @Getter
 @AllArgsConstructor
-public class UserResponseDTO {
+public class ProductResponseDTO {
     private Long id;
+    private String name;
+    private Double price;
+    private String description;
+    private Long userId;
     private String username;
-    private String role;
 }

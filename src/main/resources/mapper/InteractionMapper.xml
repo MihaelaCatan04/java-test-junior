@@ -20,4 +20,16 @@
         WHERE user_id = #{userId}
           AND product_id = #{productId}
     </delete>
+
+    <select id="getLikeCount" resultType="int">
+        SELECT COUNT(*)
+        FROM product_interactions
+        WHERE is_like is TRUE AND product_id = #{productId}
+    </select>
+
+    <select id="getDislikeCount" resultType="int">
+        SELECT COUNT(*)
+        FROM product_interactions
+        WHERE is_like is FALSE AND product_id = #{productId}
+    </select>
 </mapper>
