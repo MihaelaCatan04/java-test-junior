@@ -64,4 +64,16 @@ public class GlobalExceptionHandler {
     public ErrorResponse handleIllegalAction(IllegalActionException ex) {
         return new ErrorResponse("BAD_REQUEST", ex.getMessage());
     }
+
+    @ExceptionHandler(UserAccessDeniedException.class)
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    public ErrorResponse handleUserAccessDenied(UserAccessDeniedException ex) {
+        return new ErrorResponse("FORBIDDEN", ex.getMessage());
+    }
+
+    @ExceptionHandler(UserForbiddenException.class)
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    public ErrorResponse handleUserForbidden(UserForbiddenException ex) {
+        return new ErrorResponse("FORBIDDEN", ex.getMessage());
+    }
 }

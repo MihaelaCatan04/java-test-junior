@@ -169,6 +169,11 @@ public class ProductServiceImpl implements ProductService {
         }
 
         Long adminId = admin.getId();
+        Long authenticatedUserId = getAuthenticatedUserId();
+
+        if (!Objects.equals(adminId, authenticatedUserId)) {
+            throw new UserForbiddenException("Only admin can load products");
+        }
 
         try (InputStream inputStream = getInputStreamFromUrl(fileAddress);
              Connection conn = dataSource.getConnection()) {
