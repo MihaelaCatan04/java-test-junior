@@ -1,12 +1,8 @@
 package com.java.test.junior.controller.handler;
 
 import com.java.test.junior.controller.*;
-import com.java.test.junior.exception.FileNotFoundException;
+import com.java.test.junior.exception.*;
 import com.java.test.junior.exception.IllegalArgumentException;
-import com.java.test.junior.exception.ProductNotFoundException;
-import com.java.test.junior.exception.UserAlreadyExistsException;
-import com.java.test.junior.exception.UserNotFoundException;
-import com.java.test.junior.exception.UserNotLoggedInException;
 import com.java.test.junior.model.ErrorResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -55,5 +51,11 @@ public class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public ErrorResponse handleRuntimeException(RuntimeException ex) {
         return new ErrorResponse("INTERNAL_SERVER_ERROR", ex.getMessage());
+    }
+
+    @ExceptionHandler(PageExceedsLimit.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse handlePageExceedsLimit(PageExceedsLimit ex) {
+        return new ErrorResponse("BAD_REQUEST", ex.getMessage());
     }
 }
