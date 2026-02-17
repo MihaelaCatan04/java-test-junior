@@ -16,21 +16,10 @@ import org.springframework.security.web.SecurityFilterChain;
 public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http
-                .csrf(csrf -> csrf.disable()) // Disable CSRF for testing with Postman
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
-                        .requestMatchers("/auth/**").permitAll()
-                        .requestMatchers("/error").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/products/**").permitAll()
-                        .requestMatchers("/products/**").authenticated()
-                )
-                .exceptionHandling(exception -> exception
-                        .authenticationEntryPoint((request, response, authException) -> {
-                            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Access Denied");
-                        })
-                )
-                .httpBasic(Customizer.withDefaults());
+        http.csrf(csrf -> csrf.disable()) // Disable CSRF for testing with Postman
+                .authorizeHttpRequests(auth -> auth.requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll().requestMatchers("/auth/**").permitAll().requestMatchers("/error").permitAll().requestMatchers(HttpMethod.GET, "/products/**").permitAll().requestMatchers("/products/**").authenticated()).exceptionHandling(exception -> exception.authenticationEntryPoint((request, response, authException) -> {
+                    response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Access Denied");
+                })).httpBasic(Customizer.withDefaults());
 
         return http.build();
     }

@@ -20,10 +20,6 @@ public class MyUserDetailsService implements UserDetailsService {
             throw new UsernameNotFoundException("User not in database!");
         }
 
-        return org.springframework.security.core.userdetails.User.builder()
-                .username(userFromDb.getUsername())
-                .password(userFromDb.getPassword())
-                .roles("USER")
-                .build();
+        return org.springframework.security.core.userdetails.User.builder().username(userFromDb.getUsername()).password(userFromDb.getPassword()).roles("USER").build();
     }
 }
