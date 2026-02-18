@@ -51,5 +51,15 @@ public class UserServiceImpl implements UserService {
         return findByUsername(userRegistrationDTO.getUsername());
     }
 
+    public String getUsernameById(Long id) {
+        return userMapper.findUsernameById(id);
+    }
 
+    public User getUserByUsername(String username) {
+        return userMapper.findByUsername(username);
+    }
+
+    public User getUserByRole(String role) {
+        return userMapper.findFirstByRole(role);
+    }
 }
