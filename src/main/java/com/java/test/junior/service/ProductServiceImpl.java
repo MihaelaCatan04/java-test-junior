@@ -10,7 +10,7 @@ import com.java.test.junior.mapper.InteractionMapper;
 import com.java.test.junior.mapper.ProductMapper;
 import com.java.test.junior.mapper.UserMapper;
 import com.java.test.junior.model.*;
-import com.java.test.junior.util.AdminIdInjectorStream;
+import com.java.test.junior.util.AdminIdInjectorReader;
 import lombok.RequiredArgsConstructor;
 import org.postgresql.copy.CopyManager;
 import org.postgresql.core.BaseConnection;
@@ -20,10 +20,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.sql.DataSource;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
@@ -161,13 +160,13 @@ public class ProductServiceImpl implements ProductService {
         Long adminId = validateAdmin();
         Connection conn = DataSourceUtils.getConnection(dataSource);
 
-        try (InputStream inputStream = getInputStreamFromUrl(fileAddress)) {
-            InputStream modifiedStream = new AdminIdInjectorStream(inputStream, adminId);
+        try (InputStream inputStream = getInputStreamFromUrl(fileAddress);
+             Reader sourceReader = new InputStreamReader(inputStream, StandardCharsets.UTF_8);
+             AdminIdInjectorReader injectedReader = new AdminIdInjectorReader(sourceReader, adminId)) {
+
             BaseConnection pgConn = conn.unwrap(BaseConnection.class);
             CopyManager copyManager = new CopyManager(pgConn);
-
-            copyManager.copyIn(COPY_STATEMENT, modifiedStream);
-
+            copyManager.copyIn(COPY_STATEMENT, injectedReader);
         } catch (Exception e) {
             throw new RuntimeException("Bulk product load failed: " + e.getMessage(), e);
         } finally {
@@ -183,7 +182,7 @@ public class ProductServiceImpl implements ProductService {
                 return new FileInputStream(fileAddress);
             }
         } catch (IOException e) {
-            throw new FileNotFoundException("Failed to load file from URL: " + fileAddress);
+            throw new RuntimeException("Failed to load file: " + fileAddress, e);
         }
     }
 
