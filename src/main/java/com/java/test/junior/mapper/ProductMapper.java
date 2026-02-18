@@ -32,8 +32,6 @@ public interface ProductMapper {
 
     Long countProducts();
 
-    void createTempTable();
-
-    void moveFromTempToMain(@Param("adminId") Long adminId);
+    void copy(List<Product> batch);
 
 }

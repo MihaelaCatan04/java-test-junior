@@ -10,11 +10,9 @@ import com.java.test.junior.mapper.InteractionMapper;
 import com.java.test.junior.mapper.ProductMapper;
 import com.java.test.junior.mapper.UserMapper;
 import com.java.test.junior.model.*;
-import com.java.test.junior.util.AdminIdInjectorReader;
+import com.opencsv.CSVReader;
+import com.opencsv.exceptions.CsvValidationException;
 import lombok.RequiredArgsConstructor;
-import org.postgresql.copy.CopyManager;
-import org.postgresql.core.BaseConnection;
-import org.springframework.jdbc.datasource.DataSourceUtils;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,9 +21,8 @@ import javax.sql.DataSource;
 import java.io.*;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
-import java.sql.Connection;
-import java.sql.SQLException;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -157,21 +154,33 @@ public class ProductServiceImpl implements ProductService {
     @Override
     @Transactional
     public void loadProductsFromAddress(String fileAddress) {
+
         Long adminId = validateAdmin();
-        Connection conn = DataSourceUtils.getConnection(dataSource);
-
-        try (InputStream inputStream = getInputStreamFromUrl(fileAddress);
-             Reader sourceReader = new InputStreamReader(inputStream, StandardCharsets.UTF_8);
-             AdminIdInjectorReader injectedReader = new AdminIdInjectorReader(sourceReader, adminId)) {
-
-            BaseConnection pgConn = conn.unwrap(BaseConnection.class);
-            CopyManager copyManager = new CopyManager(pgConn);
-            copyManager.copyIn(COPY_STATEMENT, injectedReader);
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(getInputStreamFromUrl(fileAddress), StandardCharsets.UTF_8))) {
+            copyCSV(reader, adminId);
         } catch (Exception e) {
             throw new RuntimeException("Bulk product load failed: " + e.getMessage(), e);
-        } finally {
-            DataSourceUtils.releaseConnection(conn, dataSource);
         }
+    }
+
+    private void copyCSV(BufferedReader reader, Long adminId) throws IOException, CsvValidationException {
+        try (CSVReader csv = new CSVReader(reader)) {
+            csv.readNext();
+            String[] row;
+            List<Product> products = new ArrayList<>();
+            while ((row = csv.readNext()) != null) {
+                products = createProducts(row, adminId);
+            }
+            if (!products.isEmpty()) {
+                productMapper.copy(products);
+            }
+        }
+    }
+
+    private List<Product> createProducts(String[] row, Long adminId) {
+        List<Product> products = new ArrayList<>();
+        products.add(new Product(row[0], Double.parseDouble(row[1]), row.length > 2 ? row[2] : null, adminId, LocalDateTime.now(), LocalDateTime.now()));
+        return products;
     }
 
     private InputStream getInputStreamFromUrl(String fileAddress) {
