@@ -169,7 +169,7 @@ public class ProductServiceImpl implements ProductService {
             copyManager.copyIn(COPY_STATEMENT, modifiedStream);
 
         } catch (Exception e) {
-            throw new RuntimeException("Bulk product load failed", e);
+            throw new RuntimeException("Bulk product load failed: " + e.getMessage(), e);
         } finally {
             DataSourceUtils.releaseConnection(conn, dataSource);
         }
