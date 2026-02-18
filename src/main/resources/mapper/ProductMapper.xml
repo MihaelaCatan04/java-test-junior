@@ -54,25 +54,6 @@
         FROM product
     </select>
 
-    <update id="createTempTable">
-        CREATE TEMP TABLE IF NOT EXISTS temp_product
-        (
-            id          BIGSERIAL PRIMARY KEY,
-            name        VARCHAR(255)  NOT NULL,
-            price       NUMERIC(10,2) NOT NULL,
-            description TEXT,
-            user_id     BIGINT,
-            created_at  TIMESTAMP     NOT NULL DEFAULT NOW(),
-            updated_at  TIMESTAMP     NOT NULL DEFAULT NOW()
-        )
-    </update>
-
-    <insert id="moveFromTempToMain">
-        INSERT INTO product (name, price, description, user_id)
-        SELECT name, price, description, #{adminId}
-        FROM temp_product
-    </insert>
-
     <insert id="copy">
         INSERT INTO product
         (name, price, description, user_id, created_at, updated_at)
