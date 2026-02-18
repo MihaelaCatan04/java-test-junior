@@ -192,7 +192,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     private ProductResponseDTO mapToResponseDTO(Product product) {
-        return new ProductResponseDTO(product.getId(), product.getName(), product.getPrice(), product.getDescription(), product.getUserId(), getUsernameById(product.getUserId()));
+        return new ProductResponseDTO(product.getId(), product.getName(), product.getPrice(), product.getDescription(), product.getUserId(), userService.getUsernameById(product.getUserId()));
     }
 
 
