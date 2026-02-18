@@ -10,11 +10,12 @@ import com.java.test.junior.mapper.InteractionMapper;
 import com.java.test.junior.mapper.ProductMapper;
 import com.java.test.junior.mapper.UserMapper;
 import com.java.test.junior.model.*;
+import com.java.test.junior.util.AdminIdInjectorStream;
 import lombok.RequiredArgsConstructor;
 import org.postgresql.copy.CopyManager;
 import org.postgresql.core.BaseConnection;
+import org.springframework.jdbc.datasource.DataSourceUtils;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,8 +25,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.Statement;
+import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
@@ -44,35 +44,18 @@ public class ProductServiceImpl implements ProductService {
      * The FORMAT CSV syntax is robust against multi-line descriptions and special characters.
      */
 
-    private static final String COPY_SQL = """
-            COPY temp_product (name, price, description) 
-            FROM STDIN 
-            WITH (FORMAT CSV, HEADER, QUOTE '\"', DELIMITER ',', ENCODING 'UTF8', NULL '')""";
-    private static final String CREATE_TEMP_TABLE_SQL = "CREATE TEMP TABLE IF NOT EXISTS temp_product (name TEXT, price NUMERIC, description TEXT)";
-    private static final String INSERT_SQL = """
-            INSERT INTO product (name, price, description, user_id, created_at, updated_at)
-            SELECT name, price, description, ?, NOW(), NOW() 
-            FROM temp_product 
-            WHERE name IS NOT NULL AND name != ''""";
-    private static final String DROP_TABLE = "DROP TABLE IF EXISTS temp_product";
+    private static final String COPY_STATEMENT = "COPY product (name, price, description, user_id) FROM STDIN WITH CSV HEADER";
     private final ProductMapper productMapper;
     private final UserMapper userMapper;
     private final InteractionMapper interactionMapper;
-    private final PasswordEncoder passwordEncoder;
     private final DataSource dataSource;
     private final UserService userService;
 
 
     @Override
     public ProductResponseDTO createProduct(ProductDTO productDTO) {
-        Product product = new Product();
-        product.setName(productDTO.getName());
-        product.setPrice(productDTO.getPrice());
-        product.setDescription(productDTO.getDescription());
         Long userId = getAuthenticatedUserId();
-        product.setUserId(userId);
-        product.setCreatedAt(LocalDateTime.now());
-        product.setUpdatedAt(LocalDateTime.now());
+        Product product = new Product(productDTO.getName(), productDTO.getPrice(), productDTO.getDescription(), userId, LocalDateTime.now(), LocalDateTime.now());
         productMapper.insert(product);
         return mapToResponseDTO(product);
     }
@@ -162,38 +145,33 @@ public class ProductServiceImpl implements ProductService {
         return interactionMapper.getDislikeCount(productId);
     }
 
-    @Override
-    @Transactional
-    public void loadProductsFromAddress(String fileAddress) {
+    private Long validateAdmin() {
         User admin = userMapper.findFirstByRole("ADMIN");
-        if (admin == null) {
-            throw new RuntimeException("System error: Admin account not found. Please contact support.");
-        }
-
         Long adminId = admin.getId();
         Long authenticatedUserId = getAuthenticatedUserId();
-
         if (!Objects.equals(adminId, authenticatedUserId)) {
             throw new UserForbiddenException("Only admin can load products");
         }
+        return adminId;
+    }
 
-        try (InputStream inputStream = getInputStreamFromUrl(fileAddress); Connection conn = dataSource.getConnection()) {
+    @Override
+    @Transactional
+    public void loadProductsFromAddress(String fileAddress) {
+        Long adminId = validateAdmin();
+        Connection conn = DataSourceUtils.getConnection(dataSource);
 
+        try (InputStream inputStream = getInputStreamFromUrl(fileAddress)) {
+            InputStream modifiedStream = new AdminIdInjectorStream(inputStream, adminId);
             BaseConnection pgConn = conn.unwrap(BaseConnection.class);
             CopyManager copyManager = new CopyManager(pgConn);
 
-            try (Statement stmt = conn.createStatement()) {
-                stmt.execute(CREATE_TEMP_TABLE_SQL);
-                copyManager.copyIn(COPY_SQL, inputStream);
+            copyManager.copyIn(COPY_STATEMENT, modifiedStream);
 
-                try (PreparedStatement pstmt = conn.prepareStatement(INSERT_SQL)) {
-                    pstmt.setLong(1, adminId);
-                    pstmt.executeUpdate();
-                }
-                stmt.execute(DROP_TABLE);
-            }
         } catch (Exception e) {
-            throw new RuntimeException("Bulk load failed: " + e.getMessage(), e);
+            throw new RuntimeException("Bulk product load failed", e);
+        } finally {
+            DataSourceUtils.releaseConnection(conn, dataSource);
         }
     }
 
