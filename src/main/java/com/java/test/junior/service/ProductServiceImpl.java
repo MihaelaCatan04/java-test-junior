@@ -61,33 +61,50 @@ public class ProductServiceImpl implements ProductService {
         return mapToResponseDTO(product);
     }
 
+    private void validateProductId(Long id) {
+        if (id == null || id <= 0) {
+            throw new IllegalArgumentException("Product id must be positive");
+        }
+    }
+
+    private Product getProductOrThrow(Long id) {
+        Product product = productMapper.findById(id);
+        if (product == null) {
+            throw new ProductNotFoundException("Product not found");
+        }
+        return product;
+    }
+
+    private void authorizeUser(Product product, String username) {
+        UserResponseDTO currentUser = userService.findByUsername(username);
+        boolean isOwner = Objects.equals(product.getUserId(), currentUser.getId());
+        boolean isAdmin = "ADMIN".equals(currentUser.getRole());
+
+        if (!isOwner && !isAdmin) {
+            throw new UserAccessDeniedException("You do not have permission to modify this product");
+        }
+    }
+
     @Override
     public ProductResponseDTO modifyProductById(Long id, ProductDTO productDTO, String username) {
-        if (id == null || id <= 0) throw new IllegalArgumentException("Product id must be positive");
-        Product productFromDb = productMapper.findById(id);
-        if (productFromDb == null) throw new ProductNotFoundException("Product not found");
-        UserResponseDTO currentUser = userService.findByUsername(username);
-        boolean isOwner = Objects.equals(productFromDb.getUserId(), currentUser.getId());
-        boolean isAdmin = "ADMIN".equals(currentUser.getRole());
-        if (!isOwner && !isAdmin)
-            throw new UserAccessDeniedException("You do not have permission to modify this product");
+        validateProductId(id);
+        Product productFromDb = getProductOrThrow(id);
+        authorizeUser(productFromDb, username);
+
         productFromDb.setName(productDTO.getName());
         productFromDb.setPrice(productDTO.getPrice());
         productFromDb.setDescription(productDTO.getDescription());
+
         productMapper.updateProduct(id, productFromDb);
         return mapToResponseDTO(productFromDb);
     }
 
     @Override
     public void deleteProductById(Long id, String username) {
-        if (id == null || id <= 0) throw new IllegalArgumentException("Product id must be positive");
-        Product productFromDb = productMapper.findById(id);
-        if (productFromDb == null) throw new ProductNotFoundException("Product not found");
-        UserResponseDTO currentUser = userService.findByUsername(username);
-        boolean isOwner = Objects.equals(productFromDb.getUserId(), currentUser.getId());
-        boolean isAdmin = "ADMIN".equals(currentUser.getRole());
-        if (!isOwner && !isAdmin)
-            throw new UserAccessDeniedException("You do not have permission to delete this product");
+        validateProductId(id);
+        Product productFromDb = getProductOrThrow(id);
+        authorizeUser(productFromDb, username);
+
         productMapper.deleteProduct(id);
     }
 
@@ -106,36 +123,25 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-
     public List<ProductResponseDTO> getProductByName(String name) {
         List<Product> product = productMapper.getProductByName(name);
         return product.stream().map(this::mapToResponseDTO).toList();
     }
 
     @Override
-    public int likeProduct(Long productId) {
+    public int handleInteraction(Long productId, boolean isLike) {
         Long userId = getAuthenticatedUserId();
-        if (productMapper.findById(productId) == null) throw new ProductNotFoundException("Product not found");
+        if (productMapper.findById(productId) == null) {
+            throw new ProductNotFoundException("Product not found");
+        }
         Boolean currentInteraction = interactionMapper.getExistingInteraction(userId, productId);
-        if (currentInteraction != null && currentInteraction) {
+        if (currentInteraction != null && currentInteraction == isLike) {
             interactionMapper.removeInteraction(userId, productId);
         } else {
-            interactionMapper.insertInteraction(userId, productId, true);
+            interactionMapper.insertInteraction(userId, productId, isLike);
         }
-        return interactionMapper.getLikeCount(productId);
-    }
-
-    @Override
-    public int dislikeProduct(Long productId) {
-        Long userId = getAuthenticatedUserId();
-        if (productMapper.findById(productId) == null) throw new ProductNotFoundException("Product not found");
-        Boolean currentInteraction = interactionMapper.getExistingInteraction(userId, productId);
-        if (currentInteraction != null && !currentInteraction) {
-            interactionMapper.removeInteraction(userId, productId);
-        } else {
-            interactionMapper.insertInteraction(userId, productId, false);
-        }
-        return interactionMapper.getDislikeCount(productId);
+        return isLike ? interactionMapper.getLikeCount(productId)
+                : interactionMapper.getDislikeCount(productId);
     }
 
     private Long validateAdmin() {

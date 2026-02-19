@@ -80,7 +80,7 @@ public class ProductController {
     @ResponseStatus(HttpStatus.OK)
     @Operation(summary = "Like a product")
     public int likeProduct(@PathVariable Long id) {
-        return productService.likeProduct(id);
+        return productService.handleInteraction(id, true);
     }
 
     @PostMapping("{id}/dislike")
@@ -88,7 +88,7 @@ public class ProductController {
     @Operation(summary = "Dislike a product")
     public int dislikeProduct(@PathVariable Long id) {
 
-        return productService.dislikeProduct(id);
+        return productService.handleInteraction(id, false);
     }
 
     @PostMapping("/loading/products")
