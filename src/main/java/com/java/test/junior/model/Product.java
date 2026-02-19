@@ -43,4 +43,13 @@ public class Product {
 
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+
+    public Product(String name, Double price, String description, Long userId, LocalDateTime createdAt, LocalDateTime updatedAt) {
+        this.name = name;
+        this.price = price;
+        this.description = description;
+        this.userId = userId;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
+    }
 }

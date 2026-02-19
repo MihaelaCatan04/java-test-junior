@@ -8,24 +8,19 @@ import com.java.test.junior.exception.*;
 import com.java.test.junior.exception.IllegalArgumentException;
 import com.java.test.junior.mapper.InteractionMapper;
 import com.java.test.junior.mapper.ProductMapper;
-import com.java.test.junior.mapper.UserMapper;
 import com.java.test.junior.model.*;
+import com.java.test.junior.util.AdminIdInjectorReader;
 import lombok.RequiredArgsConstructor;
-import org.postgresql.copy.CopyManager;
-import org.postgresql.core.BaseConnection;
+import org.springframework.jdbc.datasource.DataSourceUtils;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.sql.DataSource;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.Statement;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
@@ -44,35 +39,16 @@ public class ProductServiceImpl implements ProductService {
      * The FORMAT CSV syntax is robust against multi-line descriptions and special characters.
      */
 
-    private static final String COPY_SQL = """
-            COPY temp_product (name, price, description) 
-            FROM STDIN 
-            WITH (FORMAT CSV, HEADER, QUOTE '\"', DELIMITER ',', ENCODING 'UTF8', NULL '')""";
-    private static final String CREATE_TEMP_TABLE_SQL = "CREATE TEMP TABLE IF NOT EXISTS temp_product (name TEXT, price NUMERIC, description TEXT)";
-    private static final String INSERT_SQL = """
-            INSERT INTO product (name, price, description, user_id, created_at, updated_at)
-            SELECT name, price, description, ?, NOW(), NOW() 
-            FROM temp_product 
-            WHERE name IS NOT NULL AND name != ''""";
-    private static final String DROP_TABLE = "DROP TABLE IF EXISTS temp_product";
     private final ProductMapper productMapper;
-    private final UserMapper userMapper;
     private final InteractionMapper interactionMapper;
-    private final PasswordEncoder passwordEncoder;
     private final DataSource dataSource;
     private final UserService userService;
 
 
     @Override
     public ProductResponseDTO createProduct(ProductDTO productDTO) {
-        Product product = new Product();
-        product.setName(productDTO.getName());
-        product.setPrice(productDTO.getPrice());
-        product.setDescription(productDTO.getDescription());
         Long userId = getAuthenticatedUserId();
-        product.setUserId(userId);
-        product.setCreatedAt(LocalDateTime.now());
-        product.setUpdatedAt(LocalDateTime.now());
+        Product product = new Product(productDTO.getName(), productDTO.getPrice(), productDTO.getDescription(), userId, LocalDateTime.now(), LocalDateTime.now());
         productMapper.insert(product);
         return mapToResponseDTO(product);
     }
@@ -85,33 +61,50 @@ public class ProductServiceImpl implements ProductService {
         return mapToResponseDTO(product);
     }
 
+    private void validateProductId(Long id) {
+        if (id == null || id <= 0) {
+            throw new IllegalArgumentException("Product id must be positive");
+        }
+    }
+
+    private Product getProductOrThrow(Long id) {
+        Product product = productMapper.findById(id);
+        if (product == null) {
+            throw new ProductNotFoundException("Product not found");
+        }
+        return product;
+    }
+
+    private void authorizeUser(Product product, String username) {
+        UserResponseDTO currentUser = userService.findByUsername(username);
+        boolean isOwner = Objects.equals(product.getUserId(), currentUser.getId());
+        boolean isAdmin = "ADMIN".equals(currentUser.getRole());
+
+        if (!isOwner && !isAdmin) {
+            throw new UserAccessDeniedException("You do not have permission to modify this product");
+        }
+    }
+
     @Override
     public ProductResponseDTO modifyProductById(Long id, ProductDTO productDTO, String username) {
-        if (id == null || id <= 0) throw new IllegalArgumentException("Product id must be positive");
-        Product productFromDb = productMapper.findById(id);
-        if (productFromDb == null) throw new ProductNotFoundException("Product not found");
-        UserResponseDTO currentUser = userService.findByUsername(username);
-        boolean isOwner = Objects.equals(productFromDb.getUserId(), currentUser.getId());
-        boolean isAdmin = "ADMIN".equals(currentUser.getRole());
-        if (!isOwner && !isAdmin)
-            throw new UserAccessDeniedException("You do not have permission to modify this product");
+        validateProductId(id);
+        Product productFromDb = getProductOrThrow(id);
+        authorizeUser(productFromDb, username);
+
         productFromDb.setName(productDTO.getName());
         productFromDb.setPrice(productDTO.getPrice());
         productFromDb.setDescription(productDTO.getDescription());
+
         productMapper.updateProduct(id, productFromDb);
         return mapToResponseDTO(productFromDb);
     }
 
     @Override
     public void deleteProductById(Long id, String username) {
-        if (id == null || id <= 0) throw new IllegalArgumentException("Product id must be positive");
-        Product productFromDb = productMapper.findById(id);
-        if (productFromDb == null) throw new ProductNotFoundException("Product not found");
-        UserResponseDTO currentUser = userService.findByUsername(username);
-        boolean isOwner = Objects.equals(productFromDb.getUserId(), currentUser.getId());
-        boolean isAdmin = "ADMIN".equals(currentUser.getRole());
-        if (!isOwner && !isAdmin)
-            throw new UserAccessDeniedException("You do not have permission to delete this product");
+        validateProductId(id);
+        Product productFromDb = getProductOrThrow(id);
+        authorizeUser(productFromDb, username);
+
         productMapper.deleteProduct(id);
     }
 
@@ -130,70 +123,50 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-
     public List<ProductResponseDTO> getProductByName(String name) {
         List<Product> product = productMapper.getProductByName(name);
         return product.stream().map(this::mapToResponseDTO).toList();
     }
 
     @Override
-    public int likeProduct(Long productId) {
+    public int handleInteraction(Long productId, boolean isLike) {
         Long userId = getAuthenticatedUserId();
-        if (productMapper.findById(productId) == null) throw new ProductNotFoundException("Product not found");
+        if (productMapper.findById(productId) == null) {
+            throw new ProductNotFoundException("Product not found");
+        }
         Boolean currentInteraction = interactionMapper.getExistingInteraction(userId, productId);
-        if (currentInteraction != null && currentInteraction) {
+        if (currentInteraction != null && currentInteraction == isLike) {
             interactionMapper.removeInteraction(userId, productId);
         } else {
-            interactionMapper.insertInteraction(userId, productId, true);
+            interactionMapper.insertInteraction(userId, productId, isLike);
         }
-        return interactionMapper.getLikeCount(productId);
+        return isLike ? interactionMapper.getLikeCount(productId)
+                : interactionMapper.getDislikeCount(productId);
     }
 
-    @Override
-    public int dislikeProduct(Long productId) {
-        Long userId = getAuthenticatedUserId();
-        if (productMapper.findById(productId) == null) throw new ProductNotFoundException("Product not found");
-        Boolean currentInteraction = interactionMapper.getExistingInteraction(userId, productId);
-        if (currentInteraction != null && !currentInteraction) {
-            interactionMapper.removeInteraction(userId, productId);
-        } else {
-            interactionMapper.insertInteraction(userId, productId, false);
+    private Long validateAdmin() {
+        User admin = userService.getUserByRole("ADMIN");
+        Long adminId = admin.getId();
+        Long authenticatedUserId = getAuthenticatedUserId();
+        if (!Objects.equals(adminId, authenticatedUserId)) {
+            throw new UserForbiddenException("Only admin can load products");
         }
-        return interactionMapper.getDislikeCount(productId);
+        return adminId;
     }
 
     @Override
     @Transactional
     public void loadProductsFromAddress(String fileAddress) {
-        User admin = userMapper.findFirstByRole("ADMIN");
-        if (admin == null) {
-            throw new RuntimeException("System error: Admin account not found. Please contact support.");
-        }
+        Long adminId = validateAdmin();
+        Connection conn = DataSourceUtils.getConnection(dataSource);
 
-        Long adminId = admin.getId();
-        Long authenticatedUserId = getAuthenticatedUserId();
+        try (InputStream inputStream = getInputStreamFromUrl(fileAddress); Reader sourceReader = new InputStreamReader(inputStream, StandardCharsets.UTF_8); AdminIdInjectorReader injectedReader = new AdminIdInjectorReader(sourceReader, adminId)) {
+            productMapper.copy(injectedReader);
 
-        if (!Objects.equals(adminId, authenticatedUserId)) {
-            throw new UserForbiddenException("Only admin can load products");
-        }
-
-        try (InputStream inputStream = getInputStreamFromUrl(fileAddress); Connection conn = dataSource.getConnection()) {
-
-            BaseConnection pgConn = conn.unwrap(BaseConnection.class);
-            CopyManager copyManager = new CopyManager(pgConn);
-
-            try (Statement stmt = conn.createStatement()) {
-                stmt.execute(CREATE_TEMP_TABLE_SQL);
-                copyManager.copyIn(COPY_SQL, inputStream);
-
-                try (PreparedStatement pstmt = conn.prepareStatement(INSERT_SQL)) {
-                    pstmt.setLong(1, adminId);
-                    pstmt.executeUpdate();
-                }
-                stmt.execute(DROP_TABLE);
-            }
         } catch (Exception e) {
-            throw new RuntimeException("Bulk load failed: " + e.getMessage(), e);
+            throw new RuntimeException("Bulk product load failed: " + e.getMessage(), e);
+        } finally {
+            DataSourceUtils.releaseConnection(conn, dataSource);
         }
     }
 
@@ -205,23 +178,19 @@ public class ProductServiceImpl implements ProductService {
                 return new FileInputStream(fileAddress);
             }
         } catch (IOException e) {
-            throw new FileNotFoundException("Failed to load file from URL: " + fileAddress);
+            throw new RuntimeException("Failed to load file: " + fileAddress, e);
         }
     }
 
     private Long getAuthenticatedUserId() {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        User user = userMapper.findByUsername(username);
+        User user = userService.getUserByUsername(username);
         if (user == null) throw new UserNotLoggedInException("User not logged in");
         return user.getId();
     }
 
-    private String getUsernameById(Long id) {
-        return userMapper.findUsernameById(id);
-    }
-
     private ProductResponseDTO mapToResponseDTO(Product product) {
-        return new ProductResponseDTO(product.getId(), product.getName(), product.getPrice(), product.getDescription(), product.getUserId(), getUsernameById(product.getUserId()));
+        return new ProductResponseDTO(product.getId(), product.getName(), product.getPrice(), product.getDescription(), product.getUserId(), userService.getUsernameById(product.getUserId()));
     }
 
 

@@ -8,7 +8,6 @@ import com.java.test.junior.model.PageResponse;
 import com.java.test.junior.model.ProductDTO;
 import com.java.test.junior.model.ProductResponseDTO;
 
-import java.io.IOException;
 import java.util.List;
 
 /**
@@ -33,9 +32,7 @@ public interface ProductService {
 
     List<ProductResponseDTO> getProductByName(String name);
 
-    int likeProduct(Long id);
+    void loadProductsFromAddress(String fileAddress);
 
-    int dislikeProduct(Long id);
-
-    void loadProductsFromAddress(String fileAddress) throws IOException;
+    int handleInteraction(Long productId, boolean isLike);
 }

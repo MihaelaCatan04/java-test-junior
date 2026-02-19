@@ -27,7 +27,8 @@
         UPDATE product
         SET name        = #{product.name},
             price       = #{product.price},
-            description = #{product.description}
+            description = #{product.description},
+            updated_at  = CURRENT_TIMESTAMP
         WHERE id = #{id}
     </update>
     <delete id="deleteProduct">
@@ -39,7 +40,8 @@
         SELECT *
         FROM product
         ORDER BY created_at ASC
-        LIMIT #{size} OFFSET #{offset}
+            LIMIT #{size}
+        OFFSET #{offset}
     </select>
 
     <select id="getProductByName" resultMap="productResultMapper">

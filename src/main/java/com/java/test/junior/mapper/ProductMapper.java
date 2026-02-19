@@ -5,12 +5,10 @@
 package com.java.test.junior.mapper;
 
 import com.java.test.junior.model.Product;
-import com.java.test.junior.model.ProductDTO;
-import com.java.test.junior.model.ProductResponseDTO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
-import org.apache.ibatis.session.RowBounds;
 
+import java.io.Reader;
 import java.util.List;
 
 /**
@@ -35,5 +33,6 @@ public interface ProductMapper {
 
     Long countProducts();
 
-
+    @org.apache.ibatis.annotations.Insert("COPY_TRIGGER")
+    void copy(@Param("reader") Reader reader);
 }
