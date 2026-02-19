@@ -11,8 +11,6 @@ import com.java.test.junior.mapper.ProductMapper;
 import com.java.test.junior.model.*;
 import com.java.test.junior.util.AdminIdInjectorReader;
 import lombok.RequiredArgsConstructor;
-import org.postgresql.copy.CopyManager;
-import org.postgresql.core.BaseConnection;
 import org.springframework.jdbc.datasource.DataSourceUtils;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -23,7 +21,6 @@ import java.io.*;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
-import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
@@ -42,7 +39,6 @@ public class ProductServiceImpl implements ProductService {
      * The FORMAT CSV syntax is robust against multi-line descriptions and special characters.
      */
 
-    private static final String COPY_STATEMENT = "COPY product (name, price, description, user_id) FROM STDIN WITH CSV HEADER";
     private final ProductMapper productMapper;
     private final InteractionMapper interactionMapper;
     private final DataSource dataSource;
@@ -158,13 +154,9 @@ public class ProductServiceImpl implements ProductService {
         Long adminId = validateAdmin();
         Connection conn = DataSourceUtils.getConnection(dataSource);
 
-        try (InputStream inputStream = getInputStreamFromUrl(fileAddress);
-             Reader sourceReader = new InputStreamReader(inputStream, StandardCharsets.UTF_8);
-             AdminIdInjectorReader injectedReader = new AdminIdInjectorReader(sourceReader, adminId)) {
+        try (InputStream inputStream = getInputStreamFromUrl(fileAddress); Reader sourceReader = new InputStreamReader(inputStream, StandardCharsets.UTF_8); AdminIdInjectorReader injectedReader = new AdminIdInjectorReader(sourceReader, adminId)) {
+            productMapper.copy(injectedReader);
 
-            BaseConnection pgConn = conn.unwrap(BaseConnection.class);
-            CopyManager copyManager = new CopyManager(pgConn);
-            copyManager.copyIn(COPY_STATEMENT, injectedReader);
         } catch (Exception e) {
             throw new RuntimeException("Bulk product load failed: " + e.getMessage(), e);
         } finally {

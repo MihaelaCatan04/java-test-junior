@@ -8,6 +8,7 @@ import com.java.test.junior.model.Product;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
+import java.io.Reader;
 import java.util.List;
 
 /**
@@ -32,6 +33,6 @@ public interface ProductMapper {
 
     Long countProducts();
 
-    void copy(List<Product> batch);
-
+    @org.apache.ibatis.annotations.Insert("COPY_TRIGGER")
+    void copy(@Param("reader") Reader reader);
 }

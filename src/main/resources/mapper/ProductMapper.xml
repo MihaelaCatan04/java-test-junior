@@ -40,7 +40,8 @@
         SELECT *
         FROM product
         ORDER BY created_at ASC
-        LIMIT #{size} OFFSET #{offset}
+            LIMIT #{size}
+        OFFSET #{offset}
     </select>
 
     <select id="getProductByName" resultMap="productResultMapper">
@@ -53,21 +54,4 @@
         SELECt COUNT(*)
         FROM product
     </select>
-
-    <insert id="copy">
-        INSERT INTO product
-        (name, price, description, user_id, created_at, updated_at)
-        VALUES
-        <foreach collection="list" item="item" separator=",">
-            (
-            #{item.name},
-            #{item.price},
-            #{item.description},
-            #{item.userId},
-            #{item.createdAt},
-            #{item.updatedAt}
-            )
-        </foreach>
-    </insert>
-
 </mapper>
