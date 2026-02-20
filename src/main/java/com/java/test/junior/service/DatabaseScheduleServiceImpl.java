@@ -8,17 +8,24 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class DatabaseScheduleServiceImpl implements DatabaseScheduleService {
     private final DatabaseDeleteService databaseDeleteService;
+    private final int BATCH_SIZE = 5000;
+    private final long MAX_DURATION_MILLIS = 4 * 60 * 60 * 1000;
+    private final static int THREAD_SLEEP = 500;
 
     @Override
     @Scheduled(cron = "0 0 2 * * *")
     public void hardDeleteOldInteractions() {
-        int batchSize = 5000;
-        long maxDurationMillis = 4 * 60 * 60 * 1000;
         long startTime = System.currentTimeMillis();
 
-        while (System.currentTimeMillis() - startTime < maxDurationMillis) {
-            int deletedCount = databaseDeleteService.performManagedBatch(batchSize);
+        while (System.currentTimeMillis() - startTime < MAX_DURATION_MILLIS) {
+            int deletedCount = databaseDeleteService.performManagedBatch(BATCH_SIZE);
             if (deletedCount == 0) {
+                break;
+            }
+            try {
+                Thread.sleep(THREAD_SLEEP);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
                 break;
             }
         }
