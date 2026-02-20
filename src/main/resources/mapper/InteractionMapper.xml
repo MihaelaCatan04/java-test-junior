@@ -1,35 +1,38 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="com.java.test.junior.mapper.InteractionMapper">
-    <select id="getExistingInteraction" resultType="java.lang.Boolean">
-        SELECT is_like
-        FROM product_interactions
-        WHERE user_id = #{userId}
-          AND product_id = #{productId}
+
+    <select id="getActiveInteraction" resultType="java.lang.Boolean">
+        SELECT is_like FROM product_interactions
+        WHERE user_id = #{userId} AND product_id = #{productId} AND is_deleted = FALSE
     </select>
 
-    <insert id="insertInteraction">
-        INSERT INTO product_interactions (user_id, product_id, is_like)
-        VALUES (#{userId}, #{productId}, #{isLike}) ON CONFLICT (user_id, product_id)
-        DO
-        UPDATE SET is_like = EXCLUDED.is_like
+    <insert id="upsertInteraction">
+        INSERT INTO product_interactions (user_id, product_id, is_like, is_deleted)
+        VALUES (#{userId}, #{productId}, #{isLike}, FALSE)
+            ON CONFLICT (user_id, product_id)
+        DO UPDATE SET
+            is_like = EXCLUDED.is_like,
+                           is_deleted = FALSE
     </insert>
 
-    <delete id="removeInteraction">
-        DELETE FROM product_interactions
-        WHERE user_id = #{userId}
-          AND product_id = #{productId}
-    </delete>
+    <update id="softDeleteInteraction">
+        UPDATE product_interactions SET is_deleted = TRUE
+        WHERE user_id = #{userId} AND product_id = #{productId}
+    </update>
 
     <select id="getLikeCount" resultType="int">
-        SELECT COUNT(*)
-        FROM product_interactions
-        WHERE is_like is TRUE AND product_id = #{productId}
+        SELECT COUNT(*) FROM product_interactions
+        WHERE is_like = TRUE AND product_id = #{productId} AND is_deleted = FALSE
     </select>
 
     <select id="getDislikeCount" resultType="int">
-        SELECT COUNT(*)
-        FROM product_interactions
-        WHERE is_like is FALSE AND product_id = #{productId}
+        SELECT COUNT(*) FROM product_interactions
+        WHERE is_like = FALSE AND product_id = #{productId} AND is_deleted = FALSE
     </select>
+
+    <delete id="deleteMarkedAsDeleted">
+        DELETE FROM product_interactions WHERE is_deleted = TRUE
+    </delete>
+
 </mapper>
