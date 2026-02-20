@@ -23,3 +23,9 @@ databaseChangeLog:
   - include:
       file: migration/V8__add_on_delete_cascade.sql
       relativeToChangelogFile: true
+  - include:
+      file: migration/V9__soft_delete_interactions.sql
+      relativeToChangelogFile: true
+  - include:
+      file: migration/V10__soft_delete_partial_indexes.sql
+      relativeToChangelogFile: true

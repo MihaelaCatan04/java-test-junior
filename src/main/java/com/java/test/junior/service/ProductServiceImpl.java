@@ -129,17 +129,22 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
+    @Transactional
     public int handleInteraction(Long productId, boolean isLike) {
         Long userId = getAuthenticatedUserId();
+
         if (productMapper.findById(productId) == null) {
             throw new ProductNotFoundException("Product not found");
         }
-        Boolean currentInteraction = interactionMapper.getExistingInteraction(userId, productId);
+
+        Boolean currentInteraction = interactionMapper.getActiveInteraction(userId, productId);
+
         if (currentInteraction != null && currentInteraction == isLike) {
-            interactionMapper.removeInteraction(userId, productId);
+            interactionMapper.softDeleteInteraction(userId, productId);
         } else {
-            interactionMapper.insertInteraction(userId, productId, isLike);
+            interactionMapper.upsertInteraction(userId, productId, isLike);
         }
+
         return isLike ? interactionMapper.getLikeCount(productId)
                 : interactionMapper.getDislikeCount(productId);
     }
