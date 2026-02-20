@@ -11,9 +11,9 @@ import org.springframework.stereotype.Service;
 public class DatabaseScheduleServiceImpl implements DatabaseScheduleService {
 
     private final DatabaseDeleteService databaseDeleteService;
-    private final int BATCH_SIZE = 5000;
-    private final long MAX_DURATION_MILLIS = 4 * 60 * 60 * 1000; // 4 hours
-    private final static int THREAD_SLEEP = 500;
+    private static final int BATCH_SIZE = 5000;
+    private static final long MAX_DURATION_MILLIS = 4 * 60 * 60 * 1000;
+    private static final int THREAD_SLEEP = 500;
 
     private static final Logger log = LoggerFactory.getLogger(DatabaseScheduleServiceImpl.class);
 
@@ -23,11 +23,13 @@ public class DatabaseScheduleServiceImpl implements DatabaseScheduleService {
         log.info("Starting hardDeleteOldInteractions task");
 
         long startTime = System.currentTimeMillis();
+        int totalDeleted = 0;
 
         while (System.currentTimeMillis() - startTime < MAX_DURATION_MILLIS) {
             try {
                 int deletedCount = databaseDeleteService.performManagedBatch(BATCH_SIZE);
-                log.info("Deleted {} records in this batch", deletedCount);
+                totalDeleted += deletedCount;
+                log.debug("Deleted {} records in this batch", deletedCount);
 
                 if (deletedCount == 0) {
                     log.info("No more records to delete, stopping task");
@@ -45,6 +47,7 @@ public class DatabaseScheduleServiceImpl implements DatabaseScheduleService {
             }
         }
 
-        log.info("Finished hardDeleteOldInteractions task");
+        log.info("Finished hardDeleteOldInteractions task. Total deleted: {}, duration: {}ms",
+                totalDeleted, System.currentTimeMillis() - startTime);
     }
 }
