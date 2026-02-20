@@ -31,8 +31,20 @@
         WHERE is_like = FALSE AND product_id = #{productId} AND is_deleted = FALSE
     </select>
 
-    <delete id="deleteMarkedAsDeleted">
-        DELETE FROM product_interactions WHERE is_deleted = TRUE
+    <select id="fetchKeysToDelete" resultType="com.java.test.junior.model.InteractionKey">
+        SELECT user_id as userId, product_id as productId
+        FROM product_interactions
+        WHERE is_deleted = TRUE
+            LIMIT #{batchSize}
+            FOR UPDATE SKIP LOCKED
+    </select>
+
+    <delete id="deleteByKeys">
+        DELETE FROM product_interactions
+        WHERE (user_id, product_id) IN
+        <foreach item="key" collection="keys" open="(" separator="," close=")">
+            (#{key.userId}, #{key.productId})
+        </foreach>
     </delete>
 
 </mapper>

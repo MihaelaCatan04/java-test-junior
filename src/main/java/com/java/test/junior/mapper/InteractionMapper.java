@@ -1,7 +1,10 @@
 package com.java.test.junior.mapper;
 
+import com.java.test.junior.model.InteractionKey;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
+
+import java.util.List;
 
 @Mapper
 public interface InteractionMapper {
@@ -19,5 +22,7 @@ public interface InteractionMapper {
 
     int getDislikeCount(@Param("productId") Long productId);
 
-    int deleteMarkedAsDeleted();
+    List<InteractionKey> fetchKeysToDelete(@Param("batchSize") int batchSize);
+
+    int deleteByKeys(@Param("keys") List<InteractionKey> keys);
 }
