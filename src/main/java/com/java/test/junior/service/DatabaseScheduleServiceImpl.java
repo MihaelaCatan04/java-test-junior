@@ -13,12 +13,13 @@ public class DatabaseScheduleServiceImpl implements DatabaseScheduleService {
     @Scheduled(cron = "0 0 2 * * *")
     public void hardDeleteOldInteractions() {
         int batchSize = 5000;
-        boolean workRemaining = true;
+        long maxDurationMillis = 4 * 60 * 60 * 1000;
+        long startTime = System.currentTimeMillis();
 
-        while (workRemaining) {
+        while (System.currentTimeMillis() - startTime < maxDurationMillis) {
             int deletedCount = databaseDeleteService.performManagedBatch(batchSize);
             if (deletedCount == 0) {
-                workRemaining = false;
+                break;
             }
         }
     }
