@@ -1,33 +1,50 @@
 package com.java.test.junior.service;
 
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
 public class DatabaseScheduleServiceImpl implements DatabaseScheduleService {
+
     private final DatabaseDeleteService databaseDeleteService;
     private final int BATCH_SIZE = 5000;
-    private final long MAX_DURATION_MILLIS = 4 * 60 * 60 * 1000;
+    private final long MAX_DURATION_MILLIS = 4 * 60 * 60 * 1000; // 4 hours
     private final static int THREAD_SLEEP = 500;
+
+    private static final Logger log = LoggerFactory.getLogger(DatabaseScheduleServiceImpl.class);
 
     @Override
     @Scheduled(cron = "0 0 2 * * *")
     public void hardDeleteOldInteractions() {
+        log.info("Starting hardDeleteOldInteractions task");
+
         long startTime = System.currentTimeMillis();
 
         while (System.currentTimeMillis() - startTime < MAX_DURATION_MILLIS) {
-            int deletedCount = databaseDeleteService.performManagedBatch(BATCH_SIZE);
-            if (deletedCount == 0) {
-                break;
-            }
             try {
+                int deletedCount = databaseDeleteService.performManagedBatch(BATCH_SIZE);
+                log.info("Deleted {} records in this batch", deletedCount);
+
+                if (deletedCount == 0) {
+                    log.info("No more records to delete, stopping task");
+                    break;
+                }
+
                 Thread.sleep(THREAD_SLEEP);
+
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
                 break;
+            } catch (Exception e) {
+                log.error("Batch delete failed, stopping early", e);
+                break;
             }
         }
+
+        log.info("Finished hardDeleteOldInteractions task");
     }
 }
