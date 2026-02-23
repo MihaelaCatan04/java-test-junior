@@ -110,6 +110,7 @@ public class AppFlowIT extends BaseIT {
                         .postForEntity(PRODUCTS, request, ProductResponseDTO.class);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        assertNotNull(response.getBody());
         assertThat(response.getBody().getName()).isEqualTo("Test Product");
         assertThat(response.getBody().getPrice()).isEqualTo(100.00);
         assertThat(response.getBody().getDescription()).isEqualTo("Test description");
@@ -126,6 +127,7 @@ public class AppFlowIT extends BaseIT {
                         .getForEntity(String.format(PRODUCTS_BY_ID, productId), ProductResponseDTO.class);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.ACCEPTED);
+        assertNotNull(response.getBody());
         assertThat(response.getBody().getUsername()).isEqualTo(ALICE);
     }
 
@@ -137,6 +139,7 @@ public class AppFlowIT extends BaseIT {
                         .getForEntity(String.format(PRODUCTS_BY_ID, 100), ErrorResponse.class);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+        assertNotNull(response.getBody());
         assertThat(response.getBody().getMessage()).isEqualTo("Product not found");
     }
 
@@ -148,6 +151,7 @@ public class AppFlowIT extends BaseIT {
                         .getForEntity(String.format(PRODUCTS_BY_ID, -1), ErrorResponse.class);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertNotNull(response.getBody());
         assertThat(response.getBody().getMessage()).isEqualTo("Product id must be positive");
     }
 
@@ -197,6 +201,7 @@ public class AppFlowIT extends BaseIT {
         PageResponse<ProductResponseDTO> body = response.getBody();
 
         assertThat(body).isNotNull();
+        assertNotNull(body);
         assertThat(body.getContent().size()).isEqualTo(2);
         assertThat(body.getTotalElements()).isEqualTo(5L);
         assertThat(body.getTotalPages()).isEqualTo(3);
@@ -210,6 +215,7 @@ public class AppFlowIT extends BaseIT {
                         .getForEntity(String.format(PRODUCTS_PAGINATION, 100, 2), ErrorResponse.class);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertNotNull(response.getBody());
         assertThat(response.getBody().getMessage()).isEqualTo("Page 100 does not exist");
     }
 
@@ -260,9 +266,9 @@ public class AppFlowIT extends BaseIT {
     @Test
     @Order(17)
     void aliceAndJohnyDislikeProduct() {
-        ResponseEntity<Integer> response1 =
-                testRestTemplate.withBasicAuth(ALICE, ALICE_PASS)
-                        .exchange(String.format(PRODUCTS_DISLIKE, productId), HttpMethod.POST, null, Integer.class);
+
+        testRestTemplate.withBasicAuth(ALICE, ALICE_PASS)
+                .exchange(String.format(PRODUCTS_DISLIKE, productId), HttpMethod.POST, null, Integer.class);
 
         ResponseEntity<Integer> response2 =
                 testRestTemplate.withBasicAuth(JOHNY, JOHNY_PASS)
@@ -279,6 +285,7 @@ public class AppFlowIT extends BaseIT {
                         .exchange(String.format(PRODUCTS_LIKE, 100), HttpMethod.POST, null, ErrorResponse.class);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+        assertNotNull(response.getBody());
         assertThat(response.getBody().getMessage()).isEqualTo("Product not found");
     }
 
@@ -308,6 +315,7 @@ public class AppFlowIT extends BaseIT {
                         .exchange(String.format(PRODUCTS_BY_ID, productId), HttpMethod.PUT, entity, ProductResponseDTO.class);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertNotNull(response.getBody());
         assertThat(response.getBody().getName()).isEqualTo("New Name");
         assertThat(response.getBody().getPrice()).isEqualTo(1000.00);
         assertThat(response.getBody().getDescription()).isEqualTo("New Description from Alice!");
@@ -341,6 +349,7 @@ public class AppFlowIT extends BaseIT {
                         .getForEntity(String.format(PRODUCTS_BY_ID, productId), ErrorResponse.class);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+        assertNotNull(response.getBody());
         assertThat(response.getBody().getMessage()).isEqualTo("Product not found");
     }
 
