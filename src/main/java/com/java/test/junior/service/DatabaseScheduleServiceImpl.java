@@ -1,23 +1,28 @@
 package com.java.test.junior.service;
 
 import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.log4j.Log4j2;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+@Log4j2
 @Service
 @RequiredArgsConstructor
 public class DatabaseScheduleServiceImpl implements DatabaseScheduleService {
 
     private final DatabaseDeleteService databaseDeleteService;
-    private static final int BATCH_SIZE = 5000;
-    private static final long MAX_DURATION_MILLIS = 4 * 60 * 60 * 1000;
-    private static final int THREAD_SLEEP = 500;
 
-    private static final Logger log = LoggerFactory.getLogger(DatabaseScheduleServiceImpl.class);
+    private static final int THREAD_SLEEP = 500;
     private static final int MAX_RETRIES = 3;
-    private static final int DELAY_BETWEEN_RETRIES = 1000;
+
+    @Value("${app.database.batch-size}")
+    private int batchSize;
+
+    @Value("${app.database.max-duration-millis}")
+    private long maxDurationMillis;
+
+
 
     @Override
     @Scheduled(cron = "0 0 2 * * *")
@@ -52,7 +57,7 @@ public class DatabaseScheduleServiceImpl implements DatabaseScheduleService {
     private int runSingleBatch() {
         for (int attempts = 1; attempts <= MAX_RETRIES; attempts++) {
             try {
-                int deleted = databaseDeleteService.performManagedBatch(BATCH_SIZE);
+                int deleted = databaseDeleteService.performManagedBatch(batchSize);
                 log.debug("Deleted {} records in this batch", deleted);
                 return deleted;
             } catch (Exception e) {
@@ -68,7 +73,7 @@ public class DatabaseScheduleServiceImpl implements DatabaseScheduleService {
     }
 
     private boolean isTimeExpired(long startTime) {
-        return System.currentTimeMillis() - startTime >= MAX_DURATION_MILLIS;
+        return System.currentTimeMillis() - startTime >= maxDurationMillis;
     }
 
     private void sleepBetweenBatches() {

@@ -4,10 +4,8 @@ services:
   db:
     image: postgres:16
     container_name: postgres-db
-    environment:
-      POSTGRES_DB: marketplace
-      POSTGRES_USER: ${SPRING_DATASOURCE_USERNAME}
-      POSTGRES_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
+    env_file:
+      - .env
     ports:
       - "5432:5432"
     volumes:
@@ -22,8 +20,5 @@ services:
       - "8080:8080"
     env_file:
       - .env
-    environment:
-      SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_URL}
-
 volumes:
   postgres_data:
