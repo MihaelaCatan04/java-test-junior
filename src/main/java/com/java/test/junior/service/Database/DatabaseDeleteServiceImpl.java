@@ -1,4 +1,4 @@
-package com.java.test.junior.service;
+package com.java.test.junior.service.Database;
 
 import com.java.test.junior.mapper.InteractionMapper;
 import com.java.test.junior.model.InteractionKey;

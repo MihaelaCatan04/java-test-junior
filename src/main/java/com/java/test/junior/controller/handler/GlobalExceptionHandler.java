@@ -1,6 +1,5 @@
 package com.java.test.junior.controller.handler;
 
-import com.java.test.junior.controller.*;
 import com.java.test.junior.exception.*;
 import com.java.test.junior.exception.IllegalArgumentException;
 import com.java.test.junior.model.ErrorResponse;
