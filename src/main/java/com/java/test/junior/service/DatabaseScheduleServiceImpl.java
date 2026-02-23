@@ -23,7 +23,6 @@ public class DatabaseScheduleServiceImpl implements DatabaseScheduleService {
     private long maxDurationMillis;
 
 
-
     @Override
     @Scheduled(cron = "0 0 2 * * *")
     public void hardDeleteOldInteractions() {
@@ -32,8 +31,7 @@ public class DatabaseScheduleServiceImpl implements DatabaseScheduleService {
 
         int totalDeleted = runBatchLoop();
 
-        log.info("Finished hardDeleteOldInteractions task. Total deleted: {}, duration: {}ms",
-                totalDeleted, System.currentTimeMillis() - startTime);
+        log.info("Finished hardDeleteOldInteractions task. Total deleted: {}, duration: {}ms", totalDeleted, System.currentTimeMillis() - startTime);
     }
 
     private int runBatchLoop() {
@@ -42,9 +40,12 @@ public class DatabaseScheduleServiceImpl implements DatabaseScheduleService {
 
         while (!isTimeExpired(startTime)) {
             int deletedCount = runSingleBatch();
-            if (deletedCount < 0) break;
-            if (deletedCount == 0) {
-                log.info("No more records to delete, stopping task");
+            if (deletedCount <= 0) {
+                if (deletedCount == -1) {
+                    log.error("Batch delete failed, stopping task");
+                } else {
+                    log.info("No more records to delete, stopping task");
+                }
                 break;
             }
             totalDeleted += deletedCount;
@@ -62,14 +63,18 @@ public class DatabaseScheduleServiceImpl implements DatabaseScheduleService {
                 return deleted;
             } catch (Exception e) {
                 log.warn("Batch delete failed, attempt {}/{}", attempts, MAX_RETRIES, e);
-                if (attempts == MAX_RETRIES) {
-                    log.error("Batch delete failed after {} attempts, stopping early", MAX_RETRIES);
-                    break;
-                }
-                sleepBetweenBatches();
+                handleRetryFailure(attempts);
             }
         }
         return -1;
+    }
+
+    private void handleRetryFailure(int attempts) {
+        if (attempts == MAX_RETRIES) {
+            log.error("Batch delete failed after {} attempts", MAX_RETRIES);
+        } else {
+            sleepBetweenBatches();
+        }
     }
 
     private boolean isTimeExpired(long startTime) {
