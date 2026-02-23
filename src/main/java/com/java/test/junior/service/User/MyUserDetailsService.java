@@ -1,6 +1,7 @@
-package com.java.test.junior.service;
+package com.java.test.junior.service.User;
 
 import com.java.test.junior.mapper.UserMapper;
+import com.java.test.junior.model.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -14,7 +15,7 @@ public class MyUserDetailsService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        com.java.test.junior.model.User userFromDb = userMapper.findByUsername(username);
+        User userFromDb = userMapper.findByUsername(username);
 
         if (userFromDb == null) {
             throw new UsernameNotFoundException("User not in database!");

@@ -2,6 +2,12 @@ package com.java.test.junior.controller;
 
 import com.java.test.junior.BaseIT;
 import com.java.test.junior.model.*;
+import com.java.test.junior.model.ErrorResponse;
+import com.java.test.junior.model.PageResponse;
+import com.java.test.junior.model.ProductDTO;
+import com.java.test.junior.model.ProductResponseDTO;
+import com.java.test.junior.model.UserRegistrationDTO;
+import com.java.test.junior.model.UserResponseDTO;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.web.client.TestRestTemplate;

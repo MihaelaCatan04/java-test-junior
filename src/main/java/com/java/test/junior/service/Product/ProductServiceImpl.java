@@ -2,13 +2,19 @@
  * Copyright (c) 2013-2022 Global Database Ltd, All rights reserved.
  */
 
-package com.java.test.junior.service;
+package com.java.test.junior.service.Product;
 
 import com.java.test.junior.exception.*;
 import com.java.test.junior.exception.IllegalArgumentException;
 import com.java.test.junior.mapper.InteractionMapper;
 import com.java.test.junior.mapper.ProductMapper;
-import com.java.test.junior.model.*;
+import com.java.test.junior.model.PageResponse;
+import com.java.test.junior.model.Product;
+import com.java.test.junior.model.ProductDTO;
+import com.java.test.junior.model.ProductResponseDTO;
+import com.java.test.junior.model.User;
+import com.java.test.junior.model.UserResponseDTO;
+import com.java.test.junior.service.User.UserService;
 import com.java.test.junior.util.AdminIdInjectorReader;
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.datasource.DataSourceUtils;
@@ -129,17 +135,22 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
+    @Transactional
     public int handleInteraction(Long productId, boolean isLike) {
         Long userId = getAuthenticatedUserId();
+
         if (productMapper.findById(productId) == null) {
             throw new ProductNotFoundException("Product not found");
         }
-        Boolean currentInteraction = interactionMapper.getExistingInteraction(userId, productId);
+
+        Boolean currentInteraction = interactionMapper.getActiveInteraction(userId, productId);
+
         if (currentInteraction != null && currentInteraction == isLike) {
-            interactionMapper.removeInteraction(userId, productId);
+            interactionMapper.softDeleteInteraction(userId, productId);
         } else {
-            interactionMapper.insertInteraction(userId, productId, isLike);
+            interactionMapper.upsertInteraction(userId, productId, isLike);
         }
+
         return isLike ? interactionMapper.getLikeCount(productId)
                 : interactionMapper.getDislikeCount(productId);
     }
