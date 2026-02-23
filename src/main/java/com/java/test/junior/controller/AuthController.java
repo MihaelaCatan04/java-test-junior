@@ -2,7 +2,7 @@ package com.java.test.junior.controller;
 
 import com.java.test.junior.model.UserRegistrationDTO;
 import com.java.test.junior.model.UserResponseDTO;
-import com.java.test.junior.service.UserService;
+import com.java.test.junior.service.User.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;

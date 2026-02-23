@@ -11,7 +11,6 @@ import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
-import org.apache.ibatis.annotations.ConstructorArgs;
 
 /**
  * @author dumitru.beselea

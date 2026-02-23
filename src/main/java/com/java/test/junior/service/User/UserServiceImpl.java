@@ -1,4 +1,4 @@
-package com.java.test.junior.service;
+package com.java.test.junior.service.User;
 
 import com.java.test.junior.exception.UserAlreadyExistsException;
 import com.java.test.junior.exception.UserNotFoundException;
