@@ -13,8 +13,8 @@ public class DatabaseScheduleServiceImpl implements DatabaseScheduleService {
 
     private final DatabaseDeleteService databaseDeleteService;
 
+    private static final int MAX_CONSECUTIVE_FAILURES = 3;
     private static final int THREAD_SLEEP = 500;
-    private static final int MAX_RETRIES = 3;
 
     @Value("${app.database.batch-size}")
     private int batchSize;
@@ -22,78 +22,41 @@ public class DatabaseScheduleServiceImpl implements DatabaseScheduleService {
     @Value("${app.database.max-duration-millis}")
     private long maxDurationMillis;
 
-
     @Override
     @Scheduled(cron = "0 0 2 * * *")
     public void hardDeleteOldInteractions() {
         log.info("Starting hardDeleteOldInteractions task");
         long startTime = System.currentTimeMillis();
         int totalDeleted = runBatchLoop();
-        log.info("Finished hardDeleteOldInteractions task. Total deleted: {}, duration: {}ms", totalDeleted, System.currentTimeMillis() - startTime);
+        log.info("Finished task. Total deleted: {}, duration: {}ms",
+                totalDeleted, System.currentTimeMillis() - startTime);
     }
 
     private int runBatchLoop() {
         int totalDeleted = 0;
+        int consecutiveFailures = 0;
         long startTime = System.currentTimeMillis();
 
-        while (!isTimeExpired(startTime)) {
-            int deletedCount = runSingleBatch();
-            if (deletedCount <= 0) {
-                logBatchLoop(deletedCount);
-                break;
-            }
-            totalDeleted += deletedCount;
-            sleepBetweenBatches();
-        }
-
-        return totalDeleted;
-    }
-    private void logBatchLoop(int deletedCount) {
-        if (deletedCount == -1) {
-            log.error("Batch delete failed, stopping task");
-        } else {
-            log.info("No more records to delete, stopping task");
-        }
-    }
-
-    private int runSingleBatch() {
-        for (int attempts = 1; attempts <= MAX_RETRIES; attempts++) {
+        while (!isTimeExpired(startTime) && consecutiveFailures < MAX_CONSECUTIVE_FAILURES) {
             try {
-                int deleted = databaseDeleteService.performManagedBatch(batchSize);
-                log.debug("Deleted {} records in this batch", deleted);
-                return deleted;
-            } catch (Exception e) {
-                if (!handleBatchFailure(e, attempts)) {
-                    return -1;
+                int deletedCount = databaseDeleteService.performManagedBatch(batchSize);
+
+                if (deletedCount == 0) {
+                    log.info("Cleanup complete: No more records found.");
+                    break;
                 }
+
+                totalDeleted += deletedCount;
+                consecutiveFailures = 0;
+                sleepBetweenBatches();
+
+            } catch (Exception e) {
+                consecutiveFailures++;
+                log.error("Batch failed ({}/{}). Reason: {}",
+                        consecutiveFailures, MAX_CONSECUTIVE_FAILURES, e.getMessage());
             }
         }
-        log.error("Batch delete failed after max retries");
-        return -1;
-    }
-
-    private boolean handleBatchFailure(Exception e, int attempts) {
-
-        log.warn("Batch delete failed (attempt {}/{})", attempts, MAX_RETRIES, e);
-
-        if (!isRetryableException(e)) {
-            log.error("Non-retryable processing error detected, stopping batch job");
-            return false;
-        }
-        if (attempts < MAX_RETRIES) {
-            sleepBackoff(attempts);
-            return true;
-        }
-        return false;
-    }
-
-    private void sleepBackoff(int retry) {
-        try {
-            long delay = Math.min(1000L * (1L << (retry - 1)), 10000L);
-            Thread.sleep(delay);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
+        return totalDeleted;
     }
 
     private boolean isTimeExpired(long startTime) {
@@ -101,14 +64,6 @@ public class DatabaseScheduleServiceImpl implements DatabaseScheduleService {
     }
 
     private void sleepBetweenBatches() {
-        try {
-            Thread.sleep(THREAD_SLEEP);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
-    }
-
-    private boolean isRetryableException(Exception e) {
-        return e instanceof java.sql.SQLTransientException || e instanceof java.net.SocketTimeoutException;
+        try { Thread.sleep(THREAD_SLEEP); } catch (InterruptedException e) { Thread.currentThread().interrupt(); }
     }
 }

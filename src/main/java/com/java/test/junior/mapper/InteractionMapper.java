@@ -8,15 +8,11 @@ import java.util.List;
 
 @Mapper
 public interface InteractionMapper {
-    Boolean getActiveInteraction(@Param("userId") Long userId,
-                                 @Param("productId") Long productId);
+    Boolean getActiveInteraction(@Param("userId") Long userId, @Param("productId") Long productId);
 
-    void upsertInteraction(@Param("userId") Long userId,
-                           @Param("productId") Long productId,
-                           @Param("isLike") boolean isLike);
+    void upsertInteraction(@Param("userId") Long userId, @Param("productId") Long productId, @Param("isLike") boolean isLike);
 
-    void softDeleteInteraction(@Param("userId") Long userId,
-                               @Param("productId") Long productId);
+    void softDeleteInteraction(@Param("userId") Long userId, @Param("productId") Long productId);
 
     int getLikeCount(@Param("productId") Long productId);
 
@@ -25,4 +21,6 @@ public interface InteractionMapper {
     List<InteractionKey> fetchKeysToDelete(@Param("batchSize") int batchSize);
 
     int deleteByKeys(@Param("keys") List<InteractionKey> keys);
+
+    void incrementDeleteAttempts(@Param("keys") List<InteractionKey> keys);
 }

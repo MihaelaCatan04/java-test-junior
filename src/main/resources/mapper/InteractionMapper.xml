@@ -35,6 +35,7 @@
         SELECT user_id as userId, product_id as productId
         FROM product_interactions
         WHERE is_deleted = TRUE
+          AND delete_attempts &lt; 3
             LIMIT #{batchSize}
             FOR UPDATE SKIP LOCKED
     </select>
@@ -46,5 +47,14 @@
             (#{key.userId}, #{key.productId})
         </foreach>
     </delete>
+
+    <update id="incrementDeleteAttempts">
+        UPDATE product_interactions
+        SET delete_attempts = delete_attempts + 1
+        WHERE (user_id, product_id) IN
+        <foreach item="key" collection="keys" open="(" separator="," close=")">
+            (#{key.userId}, #{key.productId})
+        </foreach>
+    </update>
 
 </mapper>

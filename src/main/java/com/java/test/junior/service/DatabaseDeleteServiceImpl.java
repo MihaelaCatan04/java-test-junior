@@ -21,6 +21,11 @@ public class DatabaseDeleteServiceImpl implements DatabaseDeleteService {
         List<InteractionKey> keys = interactionMapper.fetchKeysToDelete(batchSize);
         if (keys.isEmpty()) return 0;
 
-        return interactionMapper.deleteByKeys(keys);
+        try {
+            return interactionMapper.deleteByKeys(keys);
+        } catch (Exception e) {
+            interactionMapper.incrementDeleteAttempts(keys);
+            throw e;
+        }
     }
 }
