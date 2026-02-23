@@ -28,9 +28,7 @@ public class DatabaseScheduleServiceImpl implements DatabaseScheduleService {
     public void hardDeleteOldInteractions() {
         log.info("Starting hardDeleteOldInteractions task");
         long startTime = System.currentTimeMillis();
-
         int totalDeleted = runBatchLoop();
-
         log.info("Finished hardDeleteOldInteractions task. Total deleted: {}, duration: {}ms", totalDeleted, System.currentTimeMillis() - startTime);
     }
 
@@ -41,11 +39,7 @@ public class DatabaseScheduleServiceImpl implements DatabaseScheduleService {
         while (!isTimeExpired(startTime)) {
             int deletedCount = runSingleBatch();
             if (deletedCount <= 0) {
-                if (deletedCount == -1) {
-                    log.error("Batch delete failed, stopping task");
-                } else {
-                    log.info("No more records to delete, stopping task");
-                }
+                logBatchLoop(deletedCount);
                 break;
             }
             totalDeleted += deletedCount;
@@ -53,6 +47,13 @@ public class DatabaseScheduleServiceImpl implements DatabaseScheduleService {
         }
 
         return totalDeleted;
+    }
+    private void logBatchLoop(int deletedCount) {
+        if (deletedCount == -1) {
+            log.error("Batch delete failed, stopping task");
+        } else {
+            log.info("No more records to delete, stopping task");
+        }
     }
 
     private int runSingleBatch() {
@@ -62,18 +63,36 @@ public class DatabaseScheduleServiceImpl implements DatabaseScheduleService {
                 log.debug("Deleted {} records in this batch", deleted);
                 return deleted;
             } catch (Exception e) {
-                log.warn("Batch delete failed, attempt {}/{}", attempts, MAX_RETRIES, e);
-                handleRetryFailure(attempts);
+                if (!handleBatchFailure(e, attempts)) {
+                    return -1;
+                }
             }
         }
+        log.error("Batch delete failed after max retries");
         return -1;
     }
 
-    private void handleRetryFailure(int attempts) {
-        if (attempts == MAX_RETRIES) {
-            log.error("Batch delete failed after {} attempts", MAX_RETRIES);
-        } else {
-            sleepBetweenBatches();
+    private boolean handleBatchFailure(Exception e, int attempts) {
+
+        log.warn("Batch delete failed (attempt {}/{})", attempts, MAX_RETRIES, e);
+
+        if (!isRetryableException(e)) {
+            log.error("Non-retryable processing error detected, stopping batch job");
+            return false;
+        }
+        if (attempts < MAX_RETRIES) {
+            sleepBackoff(attempts);
+            return true;
+        }
+        return false;
+    }
+
+    private void sleepBackoff(int retry) {
+        try {
+            long delay = Math.min(1000L * (1L << (retry - 1)), 10000L);
+            Thread.sleep(delay);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
         }
     }
 
@@ -87,5 +106,9 @@ public class DatabaseScheduleServiceImpl implements DatabaseScheduleService {
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
+    }
+
+    private boolean isRetryableException(Exception e) {
+        return e instanceof java.sql.SQLTransientException || e instanceof java.net.SocketTimeoutException;
     }
 }
