@@ -26,8 +26,8 @@ public class AppFlowIT extends BaseIT {
     private static final String ALICE_PASS = "alice123";
     private static final String JOHNY = "johny";
     private static final String JOHNY_PASS = "johny123";
-    private static final String ADMIN = System.getProperty("ADMIN_USERNAME");
-    private static final String ADMIN_PASS = System.getProperty("ADMIN_PASSWORD");
+    private static final String ADMIN = System.getProperty("APP_ADMIN_DEFAULT_USERNAME");
+    private static final String ADMIN_PASS = System.getProperty("APP_ADMIN_DEFAULT_PASSWORD");
 
     private static final String AUTH_REGISTER = "/auth/register";
 
@@ -88,8 +88,6 @@ public class AppFlowIT extends BaseIT {
         assertNotNull(response.getBody());
         assertThat(response.getBody().getMessage()).isEqualTo("User already exists!");
     }
-
-    // ================= PRODUCTS =================
 
     @Test
     @Order(4)
