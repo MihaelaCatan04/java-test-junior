@@ -1,4 +1,4 @@
-package com.java.test.junior.service.Database;
+package com.java.test.junior.service.database;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -23,7 +23,6 @@ public class DatabaseScheduleServiceImpl implements DatabaseScheduleService {
     private long maxDurationMillis;
 
     @Override
-    @Scheduled(cron = "0 0 2 * * *")
     public void hardDeleteOldInteractions() {
         log.info("Starting hardDeleteOldInteractions task");
         long startTime = System.currentTimeMillis();
