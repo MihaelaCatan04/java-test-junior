@@ -1,4 +1,4 @@
-package com.java.test.junior.service.Database;
+package com.java.test.junior.service.database;
 
 public interface DatabaseScheduleService {
     void hardDeleteOldInteractions();
