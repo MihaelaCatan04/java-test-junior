@@ -2,8 +2,10 @@ package com.java.test.junior.controller;
 
 import com.java.test.junior.BaseIT;
 import com.java.test.junior.model.LoadingDTO;
+import com.java.test.junior.service.user.UserService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.*;
 
@@ -11,10 +13,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 public class LoadingIT extends BaseIT {
 
-    private static final String ADMIN =
-            System.getProperty("APP_ADMIN_DEFAULT_USERNAME");
-    private static final String ADMIN_PASS =
-            System.getProperty("APP_ADMIN_DEFAULT_PASSWORD");
+    @Value("${app.admin.default.username}")
+    private String admin;
+    @Value("${app.admin.default.password}")
+    private String adminPass;
 
     private static final String PRODUCTS_LOADING =
             "/products/loading/products";
@@ -27,11 +29,10 @@ public class LoadingIT extends BaseIT {
 
     @Autowired
     private TestRestTemplate restTemplate;
-
     @Test
     void loadProductsFromURL() {
         ResponseEntity<Void> response =
-                restTemplate.withBasicAuth(ADMIN, ADMIN_PASS)
+                restTemplate.withBasicAuth(admin, adminPass)
                         .postForEntity(PRODUCTS_LOADING,
                                 new LoadingDTO(PRODUCTS_URL),
                                 Void.class);
@@ -42,7 +43,7 @@ public class LoadingIT extends BaseIT {
     @Test
     void loadProductsFromCSV() {
         ResponseEntity<Void> response =
-                restTemplate.withBasicAuth(ADMIN, ADMIN_PASS)
+                restTemplate.withBasicAuth(admin, adminPass)
                         .postForEntity(PRODUCTS_LOADING,
                                 new LoadingDTO(PRODUCTS_CSV),
                                 Void.class);
