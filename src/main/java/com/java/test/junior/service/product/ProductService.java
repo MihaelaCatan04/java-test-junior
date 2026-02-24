@@ -2,7 +2,7 @@
  * Copyright (c) 2013-2022 Global Database Ltd, All rights reserved.
  */
 
-package com.java.test.junior.service.Product;
+package com.java.test.junior.service.product;
 
 import com.java.test.junior.model.PageResponse;
 import com.java.test.junior.model.ProductDTO;

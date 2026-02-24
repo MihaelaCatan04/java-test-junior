@@ -1,4 +1,4 @@
-package com.java.test.junior.service.User;
+package com.java.test.junior.service.user;
 
 import com.java.test.junior.mapper.UserMapper;
 import com.java.test.junior.model.User;

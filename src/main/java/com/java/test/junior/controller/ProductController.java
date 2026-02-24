@@ -8,7 +8,7 @@ import com.java.test.junior.model.LoadingDTO;
 import com.java.test.junior.model.PageResponse;
 import com.java.test.junior.model.ProductDTO;
 import com.java.test.junior.model.ProductResponseDTO;
-import com.java.test.junior.service.Product.ProductService;
+import com.java.test.junior.service.product.ProductService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
