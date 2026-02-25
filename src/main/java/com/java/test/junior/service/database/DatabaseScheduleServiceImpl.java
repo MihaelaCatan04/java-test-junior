@@ -3,7 +3,6 @@ package com.java.test.junior.service.database;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 @Log4j2
@@ -13,8 +12,9 @@ public class DatabaseScheduleServiceImpl implements DatabaseScheduleService {
 
     private final DatabaseDeleteService databaseDeleteService;
 
-    private static final int MAX_CONSECUTIVE_FAILURES = 3;
     private static final int THREAD_SLEEP = 500;
+    private static final long INITIAL_BACKOFF = 500;   // 500 ms
+    private static final long MAX_BACKOFF = 10000;
 
     @Value("${app.database.batch-size}")
     private int batchSize;
@@ -27,42 +27,72 @@ public class DatabaseScheduleServiceImpl implements DatabaseScheduleService {
         log.info("Starting hardDeleteOldInteractions task");
         long startTime = System.currentTimeMillis();
         int totalDeleted = runBatchLoop();
-        log.info("Finished task. Total deleted: {}, duration: {}ms",
-                totalDeleted, System.currentTimeMillis() - startTime);
+        log.info("Finished task. Total deleted: {}, duration: {}ms", totalDeleted, System.currentTimeMillis() - startTime);
     }
 
     private int runBatchLoop() {
         int totalDeleted = 0;
-        int consecutiveFailures = 0;
         long startTime = System.currentTimeMillis();
+        int failureCount = 0;
 
-        while (!isTimeExpired(startTime) && consecutiveFailures < MAX_CONSECUTIVE_FAILURES) {
+        while (isTimeNotExpired(startTime)) {
             try {
-                int deletedCount = databaseDeleteService.performManagedBatch(batchSize);
-
-                if (deletedCount == 0) {
-                    log.info("Cleanup complete: No more records found.");
+                int deleted = executeDeletionStep();
+                if (deleted <= 0) {
                     break;
                 }
-
-                totalDeleted += deletedCount;
-                consecutiveFailures = 0;
+                totalDeleted += deleted;
+                failureCount = 0;
                 sleepBetweenBatches();
 
             } catch (Exception e) {
-                consecutiveFailures++;
-                log.error("Batch failed ({}/{}). Reason: {}",
-                        consecutiveFailures, MAX_CONSECUTIVE_FAILURES, e.getMessage());
+                failureCount++;
+                handleBatchFailure(e, failureCount, startTime);
             }
         }
         return totalDeleted;
     }
 
-    private boolean isTimeExpired(long startTime) {
-        return System.currentTimeMillis() - startTime >= maxDurationMillis;
+    private int executeDeletionStep() {
+        int deletedCount = databaseDeleteService.performManagedBatch(batchSize);
+
+        if (deletedCount == 0) {
+            log.info("Cleanup complete: No more records found.");
+        }
+
+        return deletedCount;
+    }
+
+    private void handleBatchFailure(Exception e, int failureCount, long startTime) {
+        log.error("Batch failed. Reason: {}", e.getMessage());
+
+        if (isTimeNotExpired(startTime)) {
+            sleepExponentially(failureCount);
+        }
+    }
+
+    private boolean isTimeNotExpired(long startTime) {
+        return System.currentTimeMillis() - startTime <= maxDurationMillis;
     }
 
     private void sleepBetweenBatches() {
-        try { Thread.sleep(THREAD_SLEEP); } catch (InterruptedException e) { Thread.currentThread().interrupt(); }
+        try {
+            Thread.sleep(THREAD_SLEEP);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+    }
+
+    private void sleepExponentially(int failureCount) {
+        long delay = INITIAL_BACKOFF * (1L << failureCount);
+
+        delay = Math.min(delay, MAX_BACKOFF);
+
+        try {
+            Thread.sleep(delay);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+
     }
 }

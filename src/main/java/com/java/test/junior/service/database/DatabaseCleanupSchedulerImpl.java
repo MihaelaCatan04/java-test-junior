@@ -1,19 +1,20 @@
-package com.java.test.junior.configuration;
+package com.java.test.junior.service.database;
 
-import com.java.test.junior.service.database.DatabaseScheduleService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.context.annotation.Profile;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+@Log4j2
 @Component
-@Profile("local")
 @RequiredArgsConstructor
-public class LocalDatabaseScheduler {
+public class DatabaseCleanupSchedulerImpl {
+
     private final DatabaseScheduleService databaseScheduleService;
 
-    @Scheduled(cron = "0 0 2 * * *")
-    public void runCleanup() {
+    @Scheduled(cron = "${app.database.cleanup-cron}")
+    public void scheduledHardDelete() {
+        log.info("Triggered scheduled hard delete job");
         databaseScheduleService.hardDeleteOldInteractions();
     }
 }
