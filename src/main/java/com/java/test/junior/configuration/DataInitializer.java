@@ -11,7 +11,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-@Profile("local")
+@Profile({"local", "test"})
 @Component
 @RequiredArgsConstructor
 public class DataInitializer {
@@ -19,9 +19,9 @@ public class DataInitializer {
     private final PasswordEncoder passwordEncoder;
 
 
-    @Value("${app.admin.default-username}")
+    @Value("${app.admin.default.username}")
     private String defaultAdminUsername;
-    @Value("${app.admin.default-password}")
+    @Value("${app.admin.default.password}")
     private String defaultAdminPassword;
 
     @EventListener(ApplicationReadyEvent.class)
