@@ -4,6 +4,7 @@ import com.java.test.junior.BaseIT;
 import com.java.test.junior.model.*;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.*;
 
@@ -19,6 +20,11 @@ public class AuthIT extends BaseIT {
     protected static final String JOHNY_PASS = "johny123";
 
     private static final String AUTH_REGISTER = "/auth/register";
+
+    @Value("${app.admin.default.username}")
+    private String admin;
+    @Value("${app.admin.default.password}")
+    private String adminPass;
 
     @Autowired
     private TestRestTemplate restTemplate;
@@ -77,4 +83,5 @@ public class AuthIT extends BaseIT {
 
         assertThat(response.getStatusCode()).isIn(HttpStatus.CONFLICT, HttpStatus.BAD_REQUEST, HttpStatus.FORBIDDEN);
     }
+
 }
