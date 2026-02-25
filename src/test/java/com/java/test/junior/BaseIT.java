@@ -14,9 +14,6 @@ import org.testcontainers.containers.PostgreSQLContainer;
 @ActiveProfiles("test")
 public abstract class BaseIT {
 
-    @Autowired
-    protected UserService userService; // Now available to all subclasses
-
     protected static final PostgreSQLContainer<?> postgres =
             new PostgreSQLContainer<>("postgres:14-alpine")
                     .withDatabaseName("test")
@@ -32,25 +29,5 @@ public abstract class BaseIT {
         registry.add("spring.datasource.url", postgres::getJdbcUrl);
         registry.add("spring.datasource.username", postgres::getUsername);
         registry.add("spring.datasource.password", postgres::getPassword);
-    }
-
-    @BeforeEach
-    void setupAdmin() {
-        String adminUser = "admin";
-        String adminPass = "admin123";
-
-        try {
-            userService.getUserByUsername(adminUser);
-        } catch (Exception e) {
-            // Create user if not exists
-            UserRegistrationDTO dto = new UserRegistrationDTO(adminUser, adminPass);
-            userService.save(dto, null);
-
-            // IMPORTANT: If your userService.save() defaults to 'USER',
-            // you must ensure the 'admin' user has the 'ADMIN' role in the DB
-            // so that ProductServiceImpl.validateAdmin() passes.
-            // If you have a UserRepository, you might need:
-            // userRepository.updateRoleToAdmin(adminUser);
-        }
     }
 }
