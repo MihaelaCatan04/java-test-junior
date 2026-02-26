@@ -2,6 +2,7 @@ package com.java.test.junior.service.database;
 
 import com.java.test.junior.mapper.InteractionMapper;
 import com.java.test.junior.model.InteractionKey;
+import com.java.test.junior.service.interaction.InteractionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
@@ -13,18 +14,17 @@ import java.util.List;
 @RequiredArgsConstructor
 public class DatabaseDeleteServiceImpl implements DatabaseDeleteService {
 
-    private final InteractionMapper interactionMapper;
+    private final InteractionService interactionService;
 
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public int performManagedBatch(int batchSize) {
-        List<InteractionKey> keys = interactionMapper.fetchKeysToDelete(batchSize);
+        List<InteractionKey> keys = interactionService.getInteractionsToDelete(batchSize);
         if (keys.isEmpty()) return 0;
-
         try {
-            return interactionMapper.deleteByKeys(keys);
+            return interactionService.deleteInteractions(keys);
         } catch (Exception e) {
-            interactionMapper.incrementDeleteAttempts(keys);
+            interactionService.incrementDeleteAttempts(keys);
             throw e;
         }
     }

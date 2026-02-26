@@ -29,18 +29,14 @@ public class Product {
     private Long id;
     @NotBlank
     private String name;
-
     @NotNull
     @PositiveOrZero
     private Double price;
-
     @NotBlank
     @Size(max = 1000)
     private String description;
-
     @NotNull
     private Long userId;
-
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
@@ -52,4 +48,9 @@ public class Product {
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
     }
+
+
+
+
+
 }
