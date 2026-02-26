@@ -21,10 +21,9 @@ public class AuthIT extends BaseIT {
 
     private static final String AUTH_REGISTER = "/auth/register";
 
-    @Value("${app.admin.default.username}")
-    private String admin;
-    @Value("${app.admin.default.password}")
-    private String adminPass;
+
+    @Value("${app.user.default.role}")
+    private String userRole;
 
     @Autowired
     private TestRestTemplate restTemplate;
@@ -43,7 +42,7 @@ public class AuthIT extends BaseIT {
         assertNotNull(body);
         assertNotNull(body.getId());
         assertEquals(ALICE, body.getUsername());
-        assertEquals("USER", body.getRole());
+        assertEquals(userRole, body.getRole());
     }
 
     @Test

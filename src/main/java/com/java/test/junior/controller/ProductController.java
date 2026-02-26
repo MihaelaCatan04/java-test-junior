@@ -94,7 +94,7 @@ public class ProductController {
     @PostMapping("/loading/products")
     @ResponseStatus(HttpStatus.CREATED)
     @Operation(summary = "Load products from a local or remote CSV path")
-    public void loadProducts(@RequestBody LoadingDTO loadingDTO) throws IOException {
+    public void loadProducts(@RequestBody LoadingDTO loadingDTO) {
         productService.loadProductsFromAddress(loadingDTO.getFileAddress());
     }
 }

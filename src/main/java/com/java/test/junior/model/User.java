@@ -1,18 +1,18 @@
 package com.java.test.junior.model;
 
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.ToString;
+import lombok.*;
 
 
 @Getter
 @Setter
 @ToString
-@NoArgsConstructor
+@RequiredArgsConstructor
 public class User {
     private Long id;
+    @NonNull
     private String username;
+    @NonNull
     private String password;
+    @NonNull
     private String role;
 }
