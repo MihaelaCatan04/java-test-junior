@@ -201,11 +201,10 @@ public class ProductServiceImpl implements ProductService {
         User admin = userService.getUserByRole(adminRole);
         Long adminId = admin.getId();
         Long authenticatedUserId = getAuthenticatedUserId();
-        if (!Objects.equals(adminId, authenticatedUserId)) {
-            throw new UserForbiddenException("Only admin can load products");
+        if (Objects.equals(adminId, authenticatedUserId)) {
+            return adminId;
         }
-
-        return adminId;
+        throw new UserForbiddenException("Only admin can load products");
     }
 
     @Override
