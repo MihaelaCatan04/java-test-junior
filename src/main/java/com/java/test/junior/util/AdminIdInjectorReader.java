@@ -18,24 +18,41 @@ public class AdminIdInjectorReader extends Reader {
 
     @Override
     public int read(char[] cbuf, int off, int len) throws IOException {
-        int charsRead = -1;
-
-        if (lineBuffer != null) {
-            charsRead = lineBuffer.read(cbuf, off, len);
-        }
+        int charsRead = readFromBuffer(cbuf, off, len);
 
         if (charsRead == -1) {
-            String line = reader.readLine();
-            if (line == null) return -1;
-
-            String processed = isHeader ? line + ",user_id" : line + "," + adminId;
-            isHeader = false;
-
-            lineBuffer = new StringReader(processed + "\n");
-            return lineBuffer.read(cbuf, off, len);
+            charsRead = loadNextLine(cbuf, off, len);
         }
 
         return charsRead;
+    }
+
+    private int readFromBuffer(char[] cbuf, int off, int len) throws IOException {
+        if (lineBuffer == null) {
+            return -1;
+        }
+
+        return lineBuffer.read(cbuf, off, len);
+    }
+
+    private int loadNextLine(char[] cbuf, int off, int len) throws IOException {
+        String line = reader.readLine();
+        if (line == null) return -1;
+
+        String processedLine = processLine(line);
+
+        lineBuffer = new StringReader(processedLine + "\n");
+
+        return lineBuffer.read(cbuf, off, len);
+    }
+
+    private String processLine(String line) {
+        String processed = isHeader
+                ? line + ",user_id"
+                : line + "," + adminId;
+
+        isHeader = false;
+        return processed;
     }
 
     @Override
