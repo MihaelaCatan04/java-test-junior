@@ -9,44 +9,59 @@ import org.apache.ibatis.plugin.Signature;
 import org.postgresql.copy.CopyManager;
 import org.postgresql.core.BaseConnection;
 
-import java.io.IOException;
 import java.io.Reader;
 import java.sql.Connection;
-import java.sql.SQLException;
 import java.util.Map;
 
-@Intercepts({@Signature(type = StatementHandler.class, method = "prepare", args = {Connection.class, Integer.class})})
+@Intercepts(@Signature(type = StatementHandler.class, method = "prepare", args = {Connection.class, Integer.class}))
 public class CopyInterceptor implements Interceptor {
 
+    private static final String COPY_TRIGGER = "COPY_TRIGGER";
+    private static final String RETURN_SQL = "SELECT 1";
+    private static final String COPY_SQL = "COPY product (name, price, description, user_id) FROM STDIN WITH CSV HEADER";
+    private static final int ARGUMENT_INDEX = 0;
     @Override
     public Object intercept(Invocation invocation) throws Throwable {
-        StatementHandler handler = (StatementHandler) invocation.getTarget();
-        BoundSql boundSql = handler.getBoundSql();
+        BoundSql boundSql = returnBoundSql(invocation);
         String sql = boundSql.getSql();
-
-        if (sql != null && sql.contains("COPY_TRIGGER")) {
-            Connection connection = (Connection) invocation.getArgs()[0];
-
-            Object paramObj = boundSql.getParameterObject();
-            Reader reader = null;
-
-            if (paramObj instanceof Map) {
-                reader = (Reader) ((Map<?, ?>) paramObj).get("reader");
-            }
-
-            if (reader != null) {
-                executeNativeCopy(connection, reader);
-            }
-
-            return connection.prepareStatement("SELECT 1");
+        if (sql == null || !sql.contains(COPY_TRIGGER)) {
+            return invocation.proceed();
         }
+        Connection connection = executeInvocation(invocation, boundSql);
 
-        return invocation.proceed();
+        return connection.prepareStatement(RETURN_SQL);
+    }
+    private BoundSql returnBoundSql(Invocation invocation) {
+        StatementHandler handler = (StatementHandler) invocation.getTarget();
+        return handler.getBoundSql();
     }
 
-    private void executeNativeCopy(Connection connection, Reader reader) throws SQLException, IOException {
-        BaseConnection pgConn = connection.unwrap(BaseConnection.class);
-        CopyManager copyManager = new CopyManager(pgConn);
-        copyManager.copyIn("COPY product (name, price, description, user_id) FROM STDIN WITH CSV HEADER", reader);
+    private Connection executeInvocation(Invocation invocation, BoundSql boundSql) throws Exception {
+        Connection connection = extractConnection(invocation);
+        Reader reader = extractReader(boundSql);
+
+        if (reader == null) {
+            return connection;
+        }
+        executeCopy(connection, reader);
+        return connection;
+    }
+
+    private Connection extractConnection(Invocation invocation) {
+        return (Connection) invocation.getArgs()[ARGUMENT_INDEX];
+    }
+
+    private Reader extractReader(BoundSql boundSql) {
+        Object params = boundSql.getParameterObject();
+        if (params instanceof Map<?, ?> map) {
+            return (Reader) map.getOrDefault("reader", null);
+        }
+        return null;
+    }
+
+    private void executeCopy(Connection connection, Reader reader) throws Exception {
+        BaseConnection pgConnection = connection.unwrap(BaseConnection.class);
+        CopyManager copyManager = new CopyManager(pgConnection);
+        copyManager.copyIn(COPY_SQL, reader);
     }
 }
