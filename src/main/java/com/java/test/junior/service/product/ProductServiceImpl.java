@@ -6,17 +6,13 @@ package com.java.test.junior.service.product;
 
 import com.java.test.junior.exception.*;
 import com.java.test.junior.exception.IllegalArgumentException;
-import com.java.test.junior.mapper.InteractionMapper;
 import com.java.test.junior.mapper.ProductMapper;
-import com.java.test.junior.model.PageResponse;
-import com.java.test.junior.model.Product;
-import com.java.test.junior.model.ProductDTO;
-import com.java.test.junior.model.ProductResponseDTO;
-import com.java.test.junior.model.User;
-import com.java.test.junior.model.UserResponseDTO;
+import com.java.test.junior.model.*;
+import com.java.test.junior.service.interaction.InteractionService;
 import com.java.test.junior.service.user.UserService;
 import com.java.test.junior.util.AdminIdInjectorReader;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jdbc.datasource.DataSourceUtils;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -40,30 +36,39 @@ import java.util.Objects;
 @RequiredArgsConstructor
 public class ProductServiceImpl implements ProductService {
 
-    /**
-     * SQL Constants
-     * The FORMAT CSV syntax is robust against multi-line descriptions and special characters.
-     */
-
     private final ProductMapper productMapper;
-    private final InteractionMapper interactionMapper;
     private final DataSource dataSource;
     private final UserService userService;
+    private final InteractionService interactionService;
+
+    @Value("${app.admin.default.role}")
+    private String adminRole;
 
 
     @Override
     public ProductResponseDTO createProduct(ProductDTO productDTO) {
         Long userId = getAuthenticatedUserId();
-        Product product = new Product(productDTO.getName(), productDTO.getPrice(), productDTO.getDescription(), userId, LocalDateTime.now(), LocalDateTime.now());
+        Product product = mapToProduct(productDTO, userId);
         productMapper.insert(product);
+
         return mapToResponseDTO(product);
+    }
+
+    private Product mapToProduct(ProductDTO productDTO, Long userId) {
+        return new Product(
+                productDTO.getName(),
+                productDTO.getPrice(),
+                productDTO.getDescription(),
+                userId,
+                LocalDateTime.now(),
+                LocalDateTime.now());
     }
 
     @Override
     public ProductResponseDTO getProductById(Long id) {
-        if (id == null || id <= 0) throw new IllegalArgumentException("Product id must be positive");
-        Product product = productMapper.findById(id);
-        if (product == null) throw new ProductNotFoundException("Product not found");
+        validateProductId(id);
+        Product product = getProductOrThrow(id);
+
         return mapToResponseDTO(product);
     }
 
@@ -78,13 +83,15 @@ public class ProductServiceImpl implements ProductService {
         if (product == null) {
             throw new ProductNotFoundException("Product not found");
         }
+
         return product;
     }
+
 
     private void authorizeUser(Product product, String username) {
         UserResponseDTO currentUser = userService.findByUsername(username);
         boolean isOwner = Objects.equals(product.getUserId(), currentUser.getId());
-        boolean isAdmin = "ADMIN".equals(currentUser.getRole());
+        boolean isAdmin = adminRole.equals(currentUser.getRole());
 
         if (!isOwner && !isAdmin) {
             throw new UserAccessDeniedException("You do not have permission to modify this product");
@@ -97,12 +104,16 @@ public class ProductServiceImpl implements ProductService {
         Product productFromDb = getProductOrThrow(id);
         authorizeUser(productFromDb, username);
 
-        productFromDb.setName(productDTO.getName());
-        productFromDb.setPrice(productDTO.getPrice());
-        productFromDb.setDescription(productDTO.getDescription());
-
+        updateProductFields(productFromDb, productDTO);
         productMapper.updateProduct(id, productFromDb);
+
         return mapToResponseDTO(productFromDb);
+    }
+
+    private void updateProductFields(Product product, ProductDTO dto) {
+        product.setName(dto.getName());
+        product.setPrice(dto.getPrice());
+        product.setDescription(dto.getDescription());
     }
 
     @Override
@@ -116,21 +127,43 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public PageResponse<ProductResponseDTO> getPaginatedProducts(int page, int size) {
-        if (page < 1 || size < 1) throw new IllegalArgumentException("Page and size must be positive");
-        Long totalCount = productMapper.countProducts();
-        int totalPages = (int) Math.ceil((double) totalCount / size);
-        if (totalPages < page) {
-            throw new PageExceedsLimit("Page " + page + " does not exist");
+        validatePage(page, size);
+        long total = productMapper.countProducts();
+        int totalPages = calculateTotalPages(total, size);
+        validatePageLimit(page, total, totalPages);
+        List<ProductResponseDTO> content = fetchPaginatedProducts(page, size);
+
+        return new PageResponse<>(content, page, size, total, totalPages);
+    }
+
+    private void validatePage(int page, int size) {
+        if (page <= 0 || size <= 0) {
+            throw new IllegalArgumentException("Page and size must be positive");
         }
+    }
+
+    private int calculateTotalPages(long total, int size) {
+        return (int) Math.ceil((double) total / size);
+    }
+
+    private void validatePageLimit(int page, long total, int totalPages) {
+        if (total > 0 && page > totalPages)
+            throw new PageExceedsLimit("Page " + page + " does not exist");
+    }
+
+    private List<ProductResponseDTO> fetchPaginatedProducts(int page, int size) {
         int offset = (page - 1) * size;
-        List<Product> products = productMapper.getPaginatedProducts(offset, size);
-        List<ProductResponseDTO> productDTOS = products.stream().map(this::mapToResponseDTO).toList();
-        return new PageResponse<>(productDTOS, page, size, totalCount, totalPages);
+
+        return productMapper.getPaginatedProducts(offset, size)
+                .stream()
+                .map(this::mapToResponseDTO)
+                .toList();
     }
 
     @Override
     public List<ProductResponseDTO> getProductByName(String name) {
         List<Product> product = productMapper.getProductByName(name);
+
         return product.stream().map(this::mapToResponseDTO).toList();
     }
 
@@ -138,30 +171,40 @@ public class ProductServiceImpl implements ProductService {
     @Transactional
     public int handleInteraction(Long productId, boolean isLike) {
         Long userId = getAuthenticatedUserId();
+        validateProductId(productId);
+        getProductOrThrow(productId);
+        Boolean currentInteraction = interactionService.getActiveInteraction(userId, productId);
 
-        if (productMapper.findById(productId) == null) {
-            throw new ProductNotFoundException("Product not found");
+        return processInteraction(userId, productId, isLike, currentInteraction);
+    }
+
+    private int processInteraction(Long userId, Long productId,
+                                   boolean isLike, Boolean existing) {
+        softDeleteOrUpsertInteraction(userId, productId, isLike, existing);
+
+        if (isLike) {
+            return interactionService.getLikeCount(productId);
         }
 
-        Boolean currentInteraction = interactionMapper.getActiveInteraction(userId, productId);
+        return interactionService.getDislikeCount(productId);
+    }
 
-        if (currentInteraction != null && currentInteraction == isLike) {
-            interactionMapper.softDeleteInteraction(userId, productId);
-        } else {
-            interactionMapper.upsertInteraction(userId, productId, isLike);
-        }
-
-        return isLike ? interactionMapper.getLikeCount(productId)
-                : interactionMapper.getDislikeCount(productId);
+    private void softDeleteOrUpsertInteraction(Long userId, Long productId,
+                                               boolean isLike, Boolean existing) {
+        if (Objects.equals(existing, isLike))
+            interactionService.softDeleteInteraction(userId, productId);
+        else
+            interactionService.upsertInteraction(userId, productId, isLike);
     }
 
     private Long validateAdmin() {
-        User admin = userService.getUserByRole("ADMIN");
+        User admin = userService.getUserByRole(adminRole);
         Long adminId = admin.getId();
         Long authenticatedUserId = getAuthenticatedUserId();
         if (!Objects.equals(adminId, authenticatedUserId)) {
             throw new UserForbiddenException("Only admin can load products");
         }
+
         return adminId;
     }
 
@@ -173,7 +216,6 @@ public class ProductServiceImpl implements ProductService {
 
         try (InputStream inputStream = getInputStreamFromUrl(fileAddress); Reader sourceReader = new InputStreamReader(inputStream, StandardCharsets.UTF_8); AdminIdInjectorReader injectedReader = new AdminIdInjectorReader(sourceReader, adminId)) {
             productMapper.copy(injectedReader);
-
         } catch (Exception e) {
             throw new RuntimeException("Bulk product load failed: " + e.getMessage(), e);
         } finally {
@@ -183,26 +225,29 @@ public class ProductServiceImpl implements ProductService {
 
     private InputStream getInputStreamFromUrl(String fileAddress) {
         try {
-            if (fileAddress.startsWith("http")) {
-                return URI.create(fileAddress).toURL().openStream();
-            } else {
-                return new FileInputStream(fileAddress);
-            }
+            return getResourceAsStream(fileAddress);
         } catch (IOException e) {
             throw new RuntimeException("Failed to load file: " + fileAddress, e);
         }
+    }
+
+    private InputStream getResourceAsStream(String resourceName) throws IOException {
+        if (resourceName.startsWith("http")) {
+            return URI.create(resourceName).toURL().openStream();
+        }
+
+        return new FileInputStream(resourceName);
     }
 
     private Long getAuthenticatedUserId() {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = userService.getUserByUsername(username);
         if (user == null) throw new UserNotLoggedInException("User not logged in");
+
         return user.getId();
     }
 
     private ProductResponseDTO mapToResponseDTO(Product product) {
         return new ProductResponseDTO(product.getId(), product.getName(), product.getPrice(), product.getDescription(), product.getUserId(), userService.getUsernameById(product.getUserId()));
     }
-
-
 }
