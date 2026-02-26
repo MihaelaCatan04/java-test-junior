@@ -16,22 +16,18 @@ public class DataInitializer {
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
 
-
     @Value("${app.admin.default.username}")
     private String defaultAdminUsername;
     @Value("${app.admin.default.password}")
     private String defaultAdminPassword;
+    @Value("${app.admin.default.role}")
+    private String defaultAdminRole;
 
     @EventListener(ApplicationReadyEvent.class)
     @Transactional
     public void init() {
-        if (userMapper.findFirstByRole("ADMIN") == null) {
-            User admin = new User();
-            admin.setUsername(defaultAdminUsername);
-            admin.setPassword(passwordEncoder.encode(defaultAdminPassword));
-            admin.setRole("ADMIN");
-            userMapper.save(admin);
-            System.out.println("System Admin initialized successfully.");
-        }
+        if (userMapper.findFirstByRole(defaultAdminRole) != null) return;
+        User admin = new User(defaultAdminUsername, passwordEncoder.encode(defaultAdminPassword), defaultAdminRole);
+        userMapper.save(admin);
     }
 }
